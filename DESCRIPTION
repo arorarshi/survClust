@@ -1,0 +1,11 @@
+Package: survClust
+Type: Package
+Title: Identification of clinically relevant genomic subtypes using outcome weighted learning
+Version: 1.0
+Date: 2019-12-29
+Author: Arshi Arora
+Maintainer: Arshi Arora <aroraa@mskcc.org>
+Description: survClust is an outcome weighted clustering algorithm used to classify multi-omic samples on their available time to event information. 
+License: GPL (>= 2)
+Imports: Rcpp (>= 1.0.2)
+LinkingTo: Rcpp
