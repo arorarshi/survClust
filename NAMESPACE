@@ -1,4 +1,4 @@
 useDynLib(survClust, .registration=TRUE)
 exportPattern("^[[:alpha:]]+")
 importFrom(Rcpp, evalCpp)
-import(stats, survival, pdist)
+import(stats, survival, pdist, plyr)
