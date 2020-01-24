@@ -81,9 +81,9 @@ x[[1]] = cbind(xa,xb)
 
      
 ################
-# sample 30 other informant features, but scramble them.
+# sample 15 other informant features, but scramble them.
+
 permute.idx<-sample(1:length(rnames),length(rnames))
-#-'ve HR
 x1a = matrix(rnorm(n1*p, 1.5, 1), ncol=p)
 x2a = matrix(rnorm(n1*p), ncol=p)
 x3a = matrix(rnorm(n1*p, -1.5,1), ncol=p)
@@ -96,8 +96,9 @@ rownames(x[[1]]) =  rnames
 truth = c(rep(1,50), rep(2,50), rep(3,50)); names(truth) = rnames
 ```
 
-Next we simulate a overall survival dataset with 3 groups with median
-survival time as 2yrs, 3yrs and 4yrs respectively.
+Next we simulate a survival dataset with overall survival as the end
+point with 3 groups with median survival time as 2yrs, 3.25yrs and
+4.5yrs respectively.
 
 ``` r
 
@@ -140,8 +141,8 @@ cvrounds<-function(x,survdat,kk){
     fit<-list()
     for (i in 1:10){
         fit[[i]] = cv.survclust(x, survdat,kk,this.fold)
-        print(paste0("finished for", i," round CV"))
     }
+    print(paste0("finished ", this.fold, " rounds for k= ", kk))
     return(fit)
 }
 
@@ -149,12 +150,319 @@ ptm <- proc.time()
 cv.fit<-foreach(kk=2:5) %dopar% cvrounds(x,survdat,kk)
 ```
 
+After `cv.survclust` move on to **consensus.summary** to aggregate
+results over cross validation rounds, pick **k** and arrive at
+consolidated test labels.
+
+We see how logrank statistic is maximized at **k=3** and Standardized
+Pooled Withink Sum of Square Statistic (SPSS) is elbow-ed at k=3 as
+well.
+
+``` r
+
+#kk = k-1, or 5-1
+#cvr = rounds of cross-validation
+
+#this outputs 3 metrics - logrank, standardized pooled within-cluster sum of squares an dsolutions that have less than 5 samples in each k
+sim.stats = getstats(cv.fit,kk=4, cvr=10)
+
+#plotting the statistics from getstats() in a boxplot and line plot
+plotstats(sim.stats, labels=2:5, col="indianred2", cex.axis=1.5, cex.lab=1.5)
+
+#consolidated solutio label for optimal k 
+dd = getDist(x,survdat)
+cv.labels = consensus.summary(3,dd, cv.fit, survdat, bty="l")
+## performing consensus on 10 rounds
+```
+
+\[1\] “cross validated labels:” cv.labels 1 2 3 49 51 50
+<img src="README_figures/README-unnamed-chunk-5-1.png" width="768" style="display: block; margin: auto;" />
+
+``` r
+
+print(kable(table(cv.labels, truth), "html", caption="cross validated labels vs truth", row.names =TRUE) %>%
+      kable_styling(bootstrap_options = "striped", full_width = F,position="left"))
+```
+
+<table class="table table-striped" style="width: auto !important; ">
+
+<caption>
+
+cross validated labels vs truth
+
+</caption>
+
+<thead>
+
+<tr>
+
+<th style="text-align:left;">
+
+</th>
+
+<th style="text-align:right;">
+
+1
+
+</th>
+
+<th style="text-align:right;">
+
+2
+
+</th>
+
+<th style="text-align:right;">
+
+3
+
+</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+<tr>
+
+<td style="text-align:left;">
+
+1
+
+</td>
+
+<td style="text-align:right;">
+
+0
+
+</td>
+
+<td style="text-align:right;">
+
+49
+
+</td>
+
+<td style="text-align:right;">
+
+0
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+2
+
+</td>
+
+<td style="text-align:right;">
+
+0
+
+</td>
+
+<td style="text-align:right;">
+
+1
+
+</td>
+
+<td style="text-align:right;">
+
+50
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+3
+
+</td>
+
+<td style="text-align:right;">
+
+50
+
+</td>
+
+<td style="text-align:right;">
+
+0
+
+</td>
+
+<td style="text-align:right;">
+
+0
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+Whereas if we do k-means on the other hand
+
+``` r
+
+kdd = as.matrix(dist(x[[1]], method="euclidean"))
+kcmd.mat = cmdscale(kdd, nrow(kdd)-1)
+kmeans.soln = kmeans(kcmd.mat,3,nstart=100)
+
+print(kable(table(kmeans.soln$cluster, truth), "html", caption="kmeans solution vs truth", row.names = TRUE) %>%
+      kable_styling(bootstrap_options = "striped", full_width = F,position="left"))
+```
+
+<table class="table table-striped" style="width: auto !important; ">
+
+<caption>
+
+kmeans solution vs truth
+
+</caption>
+
+<thead>
+
+<tr>
+
+<th style="text-align:left;">
+
+</th>
+
+<th style="text-align:right;">
+
+1
+
+</th>
+
+<th style="text-align:right;">
+
+2
+
+</th>
+
+<th style="text-align:right;">
+
+3
+
+</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+<tr>
+
+<td style="text-align:left;">
+
+1
+
+</td>
+
+<td style="text-align:right;">
+
+35
+
+</td>
+
+<td style="text-align:right;">
+
+20
+
+</td>
+
+<td style="text-align:right;">
+
+0
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+2
+
+</td>
+
+<td style="text-align:right;">
+
+0
+
+</td>
+
+<td style="text-align:right;">
+
+6
+
+</td>
+
+<td style="text-align:right;">
+
+34
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+3
+
+</td>
+
+<td style="text-align:right;">
+
+15
+
+</td>
+
+<td style="text-align:right;">
+
+24
+
+</td>
+
+<td style="text-align:right;">
+
+16
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
 ## getDist
 
 ``` r
 
 dd = getDist(x,survdat)
 ```
+
+Where, `x` = a list of matrices of data types with samples as rows and
+features as columns. `survdat` = a matrix of two columns where first
+column is the reported time and second column are the events. Rows are
+samples.
 
 ## combineDist
 
