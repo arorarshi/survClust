@@ -4,7 +4,7 @@ output: rmarkdown::github_document
 ---
 
 
-```{r setup, echo=F}
+```{r setup, echo=F, message=FALSE}
 
 library(survClust)
 library(survival)
@@ -47,38 +47,42 @@ We wish to simulate the structure as discussed in the manuscript. Where, a typic
 
 ######################
 #simulation to test survival related + survival unrelated
-#total samples = 90, total features = 60
+#total samples = 150, total features = 150
 
-set.seed(10)
-n1 = 30 #class1
-n2 = 30 #class2
-n3 = 30 #class3
+set.seed(112)
+n1 = 50 #class1
+n2 = 50 #class2
+n3 = 50 #class3
 n = n1+n2+n3
-p = 5 #survival related features
-q = 50 #noise
+p = 15 #survival related features (10%)
+q = 120 #noise
 
-#class1 ~ N(0,1), class2 ~ N(-1.5,1), class3 ~ N(1.5,1)
+#class1 ~ N(1.5,1), class2 ~ N(0,1), class3 ~ N(-1.5,1)
+
 rnames = paste0("S",1:n)
 x = NULL
-x1a = matrix(rnorm(n1*p), ncol=p)
-x2a = matrix(rnorm(n1*p, -1.5,1), ncol=p)
-x3a = matrix(rnorm(n1*p, 1.5, 1), ncol=p)
+x1a = matrix(rnorm(n1*p, 1.5, 1), ncol=p)
+x2a = matrix(rnorm(n1*p), ncol=p)
+x3a = matrix(rnorm(n1*p, -1.5,1), ncol=p)
 xa = rbind(x1a,x2a,x3a)
 xb = matrix(rnorm(n*q), ncol=q)
 x[[1]] = cbind(xa,xb)
 
-# sample 5 other informant features, but scramble them to break survival association.
+     
+################
+# sample 30 other informant features, but scramble them.
 permute.idx<-sample(1:length(rnames),length(rnames))
-x1a = matrix(rnorm(n1*p), ncol=p)
-x2a = matrix(rnorm(n1*p, -1.5,1), ncol=p)
-x3a = matrix(rnorm(n1*p, 1.5, 1), ncol=p)
+#-'ve HR
+x1a = matrix(rnorm(n1*p, 1.5, 1), ncol=p)
+x2a = matrix(rnorm(n1*p), ncol=p)
+x3a = matrix(rnorm(n1*p, -1.5,1), ncol=p)
 xa = rbind(x1a,x2a,x3a)
-x[[1]] = cbind(x[[1]],xa[permute.idx,])
 
-rownames(x[[1]]) = rnames
+x[[1]] = cbind(x[[1]],xa[permute.idx,])
+rownames(x[[1]]) =  rnames
 
 #true class labels
-truth = c(rep(1,30), rep(2,30), rep(3,30)); names(truth) = rnames
+truth = c(rep(1,50), rep(2,50), rep(3,50)); names(truth) = rnames
 
 ```
 
@@ -87,11 +91,11 @@ Next we simulate a overall survival dataset with 3 groups with median survival t
 ```{r, fig.height=4, fig.width=4}
 
 
-set.seed(8688)
-l1 = log(2)/6
-l2 = log(2)/4
+set.seed(112)
+l1 = log(2)/4.5
+l2 = log(2)/3.25
 l3 = log(2)/2
-n = 30
+n = 50
 
 s1<-rexp(n,rate=l1)
 c1<-runif(n,0,10)
@@ -123,8 +127,8 @@ cvrounds<-function(x,survdat,kk){
     fit<-list()
     for (i in 1:10){
         fit[[i]] = cv.survclust(x, survdat,kk,this.fold)
-        print(paste0("finished for", i," round CV"))
     }
+    print(paste0("finished ", this.fold, " rounds for k= ", kk))
     return(fit)
 }
 
@@ -133,8 +137,42 @@ cv.fit<-foreach(kk=2:5) %dopar% cvrounds(x,survdat,kk)
 
 ```
 
+After `cv.survclust` move on to **consensus.summary*_** to aggregate results over cross validation rounds, pick **k** and arrive at consolidated test labels.  
 
-##getDist
+```{r, fig.height=8, fig.width=8, eval=FALE}
+
+#kk = k-1, or 5-1
+#cvr = rounds of cross-validation
+
+#this outputs 3 metrics - logrank, standardized pooled within-cluster sum of squares an dsolutions that have less than 5 samples in each k
+sim.stats = getstats(cv.fit,kk=4, cvr=10)
+
+#plotting the statistics from getstats() in a boxplot and line plot
+plotstats(sim.stats, labels=2:5, col="indianred2", cex.axis=1.5, cex.lab=1.5)
+
+#consolidated solutio label for optimal k 
+dd = getDist(x,survdat)
+cv.labels = consensus.summary(3,dd, cv.fit, survdat, bty="l")
+
+kable(table(cv.labels, truth))
+```
+
+Wheras if we do k-means on the other hand
+
+```{r, eval=FALSE}
+
+kdd = as.matrix(dist(x[[1]], method="euclidean"))
+kcmd.mat = cmdscale(kdd, nrow(kdd)-1)
+kmeans.soln = kmeans(kcmd.mat,3,nstart=100)
+
+kable(table(kmeans.soln$cluster, truth))
+
+
+```
+
+
+
+## getDist
 
 ```{r,eval=FALSE}
 
@@ -144,7 +182,7 @@ dd = getDist(x,survdat)
 
 
 
-##combineDist
+## combineDist
 ```{r,eval=FALSE}
 
 cc = combineDist(dd)

@@ -1,12 +1,6 @@
 survClust vignette
 ================
 
-    ## Loading required package: foreach
-
-    ## Loading required package: iterators
-
-    ## Loading required package: parallel
-
 ## Installation
 
 ``` r
@@ -64,38 +58,42 @@ below.
 
 ######################
 #simulation to test survival related + survival unrelated
-#total samples = 90, total features = 60
+#total samples = 150, total features = 150
 
-set.seed(10)
-n1 = 30 #class1
-n2 = 30 #class2
-n3 = 30 #class3
+set.seed(112)
+n1 = 50 #class1
+n2 = 50 #class2
+n3 = 50 #class3
 n = n1+n2+n3
-p = 5 #survival related features
-q = 50 #noise
+p = 15 #survival related features (10%)
+q = 120 #noise
 
-#class1 ~ N(0,1), class2 ~ N(-1.5,1), class3 ~ N(1.5,1)
+#class1 ~ N(1.5,1), class2 ~ N(0,1), class3 ~ N(-1.5,1)
+
 rnames = paste0("S",1:n)
 x = NULL
-x1a = matrix(rnorm(n1*p), ncol=p)
-x2a = matrix(rnorm(n1*p, -1.5,1), ncol=p)
-x3a = matrix(rnorm(n1*p, 1.5, 1), ncol=p)
+x1a = matrix(rnorm(n1*p, 1.5, 1), ncol=p)
+x2a = matrix(rnorm(n1*p), ncol=p)
+x3a = matrix(rnorm(n1*p, -1.5,1), ncol=p)
 xa = rbind(x1a,x2a,x3a)
 xb = matrix(rnorm(n*q), ncol=q)
 x[[1]] = cbind(xa,xb)
 
-# sample 5 other informant features, but scramble them to break survival association.
+     
+################
+# sample 30 other informant features, but scramble them.
 permute.idx<-sample(1:length(rnames),length(rnames))
-x1a = matrix(rnorm(n1*p), ncol=p)
-x2a = matrix(rnorm(n1*p, -1.5,1), ncol=p)
-x3a = matrix(rnorm(n1*p, 1.5, 1), ncol=p)
+#-'ve HR
+x1a = matrix(rnorm(n1*p, 1.5, 1), ncol=p)
+x2a = matrix(rnorm(n1*p), ncol=p)
+x3a = matrix(rnorm(n1*p, -1.5,1), ncol=p)
 xa = rbind(x1a,x2a,x3a)
-x[[1]] = cbind(x[[1]],xa[permute.idx,])
 
-rownames(x[[1]]) = rnames
+x[[1]] = cbind(x[[1]],xa[permute.idx,])
+rownames(x[[1]]) =  rnames
 
 #true class labels
-truth = c(rep(1,30), rep(2,30), rep(3,30)); names(truth) = rnames
+truth = c(rep(1,50), rep(2,50), rep(3,50)); names(truth) = rnames
 ```
 
 Next we simulate a overall survival dataset with 3 groups with median
@@ -104,11 +102,11 @@ survival time as 2yrs, 3yrs and 4yrs respectively.
 ``` r
 
 
-set.seed(8688)
-l1 = log(2)/6
-l2 = log(2)/4
+set.seed(112)
+l1 = log(2)/4.5
+l2 = log(2)/3.25
 l3 = log(2)/2
-n = 30
+n = 50
 
 s1<-rexp(n,rate=l1)
 c1<-runif(n,0,10)
@@ -126,7 +124,7 @@ time = c(t1,t2,t3)
 survdat = cbind(time, event)
 rownames(survdat) = rnames
 #survfit(Surv(time,event) ~ truth)
-plot(survfit(Surv(time,event) ~ truth), lty=1:3, mark.time=T, bty="l",lwd=1.5)
+plot(survfit(Surv(time,event) ~ truth), lty=1:3, mark.time=T, bty="l",lwd=1.5, main="simulated survival dataset")
 ```
 
 <img src="README_figures/README-unnamed-chunk-3-1.png" width="384" style="display: block; margin: auto;" />
@@ -151,14 +149,14 @@ ptm <- proc.time()
 cv.fit<-foreach(kk=2:5) %dopar% cvrounds(x,survdat,kk)
 ```
 
-\#\#getDist
+## getDist
 
 ``` r
 
 dd = getDist(x,survdat)
 ```
 
-\#\#combineDist
+## combineDist
 
 ``` r
 
