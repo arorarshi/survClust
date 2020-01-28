@@ -175,7 +175,7 @@ cv.labels = consensus.summary(3,dd, cv.fit, survdat, bty="l")
 ## performing consensus on 10 rounds
 ```
 
-\[1\] “cross validated labels:” cv.labels 1 2 3 50 51 49
+\[1\] “cross validated labels:” cv.labels 1 2 3 49 51 50
 <img src="README_figures/README-unnamed-chunk-5-1.png" width="768" style="display: block; margin: auto;" />
 
 ``` r
@@ -234,13 +234,13 @@ cross validated labels vs truth
 
 <td style="text-align:right;">
 
-50
+0
 
 </td>
 
 <td style="text-align:right;">
 
-0
+49
 
 </td>
 
@@ -290,13 +290,13 @@ cross validated labels vs truth
 
 <td style="text-align:right;">
 
-0
+50
 
 </td>
 
 <td style="text-align:right;">
 
-49
+0
 
 </td>
 
@@ -311,8 +311,6 @@ cross validated labels vs truth
 </tbody>
 
 </table>
-
-Whereas if we do k-means on the other hand
 
 ``` r
 #compute distances (unweighted) between samples
@@ -407,19 +405,19 @@ k-means solution vs truth
 
 <td style="text-align:right;">
 
-35
-
-</td>
-
-<td style="text-align:right;">
-
-20
-
-</td>
-
-<td style="text-align:right;">
-
 0
+
+</td>
+
+<td style="text-align:right;">
+
+6
+
+</td>
+
+<td style="text-align:right;">
+
+34
 
 </td>
 
@@ -435,19 +433,19 @@ k-means solution vs truth
 
 <td style="text-align:right;">
 
+35
+
+</td>
+
+<td style="text-align:right;">
+
+20
+
+</td>
+
+<td style="text-align:right;">
+
 0
-
-</td>
-
-<td style="text-align:right;">
-
-6
-
-</td>
-
-<td style="text-align:right;">
-
-34
 
 </td>
 

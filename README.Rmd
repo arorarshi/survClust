@@ -162,7 +162,6 @@ print(kable(table(cv.labels, truth), "html", caption="cross validated labels vs 
 
 ```
 
-Whereas if we do k-means on the other hand
 
 ```{r}
 #compute distances (unweighted) between samples
