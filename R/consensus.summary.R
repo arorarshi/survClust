@@ -31,7 +31,7 @@ plotstats<-function(xx,labels=NULL,...){
   boxplot(xx$lr, frame.plot=F, names=labels, ylab="logrank",outline=F,...)
   
   #boxplot of within over tot across datasets
-  boxplot(xx$within.over.tot, frame.plot=F, names=labels,ylab="within over tot",...)
+  boxplot(xx$within.over.tot, frame.plot=F, names=labels, ylab="SPWSS", ...)
   
   plot(xx$bad.sol, frame.plot=F,type='o', pch=8, ylab="solutions <= 5",xlab="k",xaxt="n",lwd=2,cex=1,...)
   axis(1, at=1:length(labels), labels=labels)

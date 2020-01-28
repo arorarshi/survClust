@@ -25,9 +25,9 @@ etc.
 
 Below is the workflow of proposed *survClust* method:
 
-1.  `getDist` - Compute a weighted distance matrix across given `m` data
-    types. Standardization and accounting for non-overlapping samples is
-    also accomplished in this step.
+1.  `getDist` - Compute a weighted distance matrix based on outcome
+    across given `m` data types. Standardization and accounting for
+    non-overlapping samples is also accomplished in this step.
 
 2.  `combineDist`- Integrate `m` data types by averaging over `m`
     weighted distance matrices.
@@ -155,7 +155,7 @@ results over cross validation rounds, pick **k** and arrive at
 consolidated test labels.
 
 We see how logrank statistic is maximized at **k=3** and Standardized
-Pooled Withink Sum of Square Statistic (SPSS) is elbow-ed at k=3 as
+Pooled Within Sum of Square Statistic (SPWSS) is elbow-ed at k=3 as
 well.
 
 ``` r
@@ -175,7 +175,7 @@ cv.labels = consensus.summary(3,dd, cv.fit, survdat, bty="l")
 ## performing consensus on 10 rounds
 ```
 
-\[1\] “cross validated labels:” cv.labels 1 2 3 49 51 50
+\[1\] “cross validated labels:” cv.labels 1 2 3 50 51 49
 <img src="README_figures/README-unnamed-chunk-5-1.png" width="768" style="display: block; margin: auto;" />
 
 ``` r
@@ -234,13 +234,13 @@ cross validated labels vs truth
 
 <td style="text-align:right;">
 
-0
+50
 
 </td>
 
 <td style="text-align:right;">
 
-49
+0
 
 </td>
 
@@ -290,13 +290,13 @@ cross validated labels vs truth
 
 <td style="text-align:right;">
 
-50
+0
 
 </td>
 
 <td style="text-align:right;">
 
-0
+49
 
 </td>
 
@@ -315,12 +315,17 @@ cross validated labels vs truth
 Whereas if we do k-means on the other hand
 
 ``` r
-
+#compute distances (unweighted) between samples
 kdd = as.matrix(dist(x[[1]], method="euclidean"))
+
+#project them in multidimension space via cmdscale
 kcmd.mat = cmdscale(kdd, nrow(kdd)-1)
+
+#cluster using k-means
 kmeans.soln = kmeans(kcmd.mat,3,nstart=100)
 
-print(kable(table(kmeans.soln$cluster, truth), "html", caption="kmeans solution vs truth", row.names = TRUE) %>%
+#plot cross tabulation between the truth and k=3 of kmeans
+print(kable(table(kmeans.soln$cluster, truth), "html", caption="k-means solution vs truth", row.names = TRUE) %>%
       kable_styling(bootstrap_options = "striped", full_width = F,position="left"))
 ```
 
@@ -328,7 +333,7 @@ print(kable(table(kmeans.soln$cluster, truth), "html", caption="kmeans solution 
 
 <caption>
 
-kmeans solution vs truth
+k-means solution vs truth
 
 </caption>
 
@@ -374,6 +379,34 @@ kmeans solution vs truth
 
 <td style="text-align:right;">
 
+15
+
+</td>
+
+<td style="text-align:right;">
+
+24
+
+</td>
+
+<td style="text-align:right;">
+
+16
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left;">
+
+2
+
+</td>
+
+<td style="text-align:right;">
+
 35
 
 </td>
@@ -396,7 +429,7 @@ kmeans solution vs truth
 
 <td style="text-align:left;">
 
-2
+3
 
 </td>
 
@@ -415,34 +448,6 @@ kmeans solution vs truth
 <td style="text-align:right;">
 
 34
-
-</td>
-
-</tr>
-
-<tr>
-
-<td style="text-align:left;">
-
-3
-
-</td>
-
-<td style="text-align:right;">
-
-15
-
-</td>
-
-<td style="text-align:right;">
-
-24
-
-</td>
-
-<td style="text-align:right;">
-
-16
 
 </td>
 
