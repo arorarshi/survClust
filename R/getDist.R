@@ -6,19 +6,20 @@
 #computes weights for a given data, standalone
 getWeights<-function(xx, survdat,cv=FALSE, train.snames=NULL){
   #add a check for missing rownames
-  if(is.null(rownames(xx))){stop("provide rownames in getDist")}
+  if(is.null(rownames(xx)) | is.null(rownames(survdat))){stop("rownames required in survival and data matrix")}
   #how can we compute faster HRs, apply is faster than for 
   
   if(cv==FALSE){
     #always intersect with survdat
-    inter = intersect(rownames(survdat),rownames(xx))
+    inter <- intersect(rownames(survdat),rownames(xx))
     xx = xx[inter,,drop=FALSE]
     survdat = survdat[inter,]
     
     #calculate survobj upfront
-    survobj<-Surv(as.numeric(survdat[,1]),as.numeric(survdat[,2]))
+    #set infinite HR to a small value, and NA to 0
+    survobj<-survival::Surv(as.numeric(survdat[,1]),as.numeric(survdat[,2]))
     logHR<- apply(xx,2, function(y) tryCatch({
-      summary(coxph(survobj ~ y))$coefficients[1]
+      summary(survival::coxph(survobj ~ y))$coefficients[1]
     }, warning = function(w) {
       if(grepl("infinite", w$message))
       {message(paste0(w$message, " setting weights=0"));return(1e-6)}
@@ -37,14 +38,14 @@ getWeights<-function(xx, survdat,cv=FALSE, train.snames=NULL){
   }
   
   if(cv==TRUE){
-    inter = intersect(rownames(survdat), intersect(rownames(xx),train.snames))
-    xx.train = xx[inter,,drop=FALSE]
+    inter <- intersect(rownames(survdat), intersect(rownames(xx),train.snames))
+    xx.train <- xx[inter,,drop=FALSE]
     survdat = survdat[inter,]
     
     #calculate survobj upfront
-    survobj<-Surv(as.numeric(survdat[,1]),as.numeric(survdat[,2]))
+    survobj<-survival::Surv(as.numeric(survdat[,1]),as.numeric(survdat[,2]))
     logHR<- apply(xx.train,2, function(y) tryCatch({
-      summary(coxph(survobj ~ y))$coefficients[1]
+      summary(survival::coxph(survobj ~ y))$coefficients[1]
     }, warning = function(w) {
       if(grepl("infinite", w$message))
       {message(paste0(w$message, " setting weights=0"));return(0)}
@@ -87,10 +88,10 @@ getUnionDist<-function(rnames,dat, type=NULL){
       rownames(dist.dat[[i]]) = colnames(dist.dat[[i]]) = rownames(m)}}
     
     if(is.null(type)){    
-      m2 = m*m
-      m2.ss = sum(m2, na.rm=T)
-      m.tr = m/sqrt(m2.ss)
-      dist.dat[[i]] = as.matrix(dist(m.tr, method="euclidean"))
+      m2 <- m*m
+      m2.ss <- sum(m2, na.rm=T)
+      m.tr <- m/sqrt(m2.ss)
+      dist.dat[[i]] <- as.matrix(dist(m.tr, method="euclidean"))
     }
   }
   return(dist.dat)
@@ -107,14 +108,14 @@ getDist<-function(datasets,survdat,cv=FALSE,train.snames=NULL,type=NULL){
     stop("no deaths or censor events found")
   
   #convert everything to numeric
-  dat<-lapply(datasets, function(x) as.data.frame(aaply(x,1,as.numeric,.drop=FALSE)) )
+  #dat<-lapply(datasets, function(x) as.data.frame(aaply(x,1,as.numeric,.drop=FALSE)) )
   rnames<-unlist(lapply(datasets, function(x) rownames(x)))
   rnames<-unique(rnames)
   
   if(is.null(rnames))
     stop("rowanmes=NULL, add sample names to matrix of datasets list object")
   
-  dat.wt<-lapply(dat, function(x) getWeights(x,survdat,cv,train.snames))
+  dat.wt<-lapply(datasets, function(x) getWeights(x,survdat,cv,train.snames))
   
   if(cv==TRUE){
     dat.all.wt<-lapply(dat.wt, function(x) x$all)
