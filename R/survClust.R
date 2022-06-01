@@ -1,9 +1,27 @@
 
-##########################
-# survClust
-###########################
 
-survclust<-function(combine.dist,survdat,k, cmd.k=NULL){
+#' perform supervised clustering for a particular \code{k}
+#'
+#'@description
+#'\code{survClust} function performs supervised clustering on a \code{combineDist} output for a particular \code{k}. 
+#'It uses all \code{n-1} dimensions for clustering.
+
+#' @param combine.dist integrated weighted distance matrix from \code{combineDist}
+#' @param survdat A nx2 matrix consisting of survival data with \code{n} samples and first column as time and second column as events, with samples as rownames
+#' @param k choice of \code{k} to perform clustering on samples
+#' @param cmd.k number of dimensions used by \code{cmdscale} to perform clustering on samples. Defaults is \code{n-1} 
+#'
+#' @return
+#' \itemize{
+#'  \item{fit} { returns a list , \code{fit} consisting of all clustering samples along with 
+#'  \code{fit.lr}, computed logrank statistic between \code{k} clusters}
+#' }
+#' 
+#' @author Arshi Arora
+#' @examples
+#' @export
+#' 
+survClust<-function(combine.dist,survdat,k, cmd.k=NULL){
   if(is.null(rownames(survdat)))
     stop("rowanmes of survdat can't be NULL")
   
@@ -47,38 +65,3 @@ survclust<-function(combine.dist,survdat,k, cmd.k=NULL){
   return(fit)
 }
 
-#predict test labels on survclust fitted
-predict.test.label<-function(all.cmd,fit,k){
-  all.cmd = as.matrix(all.cmd)
-  train.snames = names(fit$cluster)
-  test.snames = setdiff(rownames(all.cmd),train.snames)
-  
-  #where row - samples, col - genes
-  centroid = matrix(NA, nrow = k, ncol = ncol(all.cmd))
-  for (kk in 1:k) {
-    #meaning k clust has one sample. #WARNING #check
-    if(is.vector(all.cmd[names(fit$cluster)[which(fit$cluster==kk)],]) & ncol(all.cmd) > 1){
-      message(paste0("k=",k, " training cluster has one sample, prediction might be inaccurate"))
-      centroid[kk, ]=all.cmd[names(fit$cluster)[which(fit$cluster==kk)], ]
-    }
-    
-    if (!(is.null(dim(all.cmd[names(fit$cluster)[fit$cluster==kk],])))){
-      if(ncol(all.cmd)> 1){centroid[kk, ]=apply(all.cmd[names(fit$cluster)[which(fit$cluster==kk)], ], 2, mean)}
-    }
-    
-    if(ncol(all.cmd)==1){centroid[kk,] = mean(all.cmd[names(fit$cluster)[which(fit$cluster==kk)], ])}
-  }
-  
-  dist.whole = apply(centroid,1,function(x) as.matrix(pdist(x,all.cmd)))
-  
-  #assign the cluster membership
-  dist.labels = apply(dist.whole,1,which.min)
-  names(dist.labels) = rownames(all.cmd)
-  test.labels = dist.labels[test.snames]
-  
-  #is missing a class label via pdist
-  if(length(unique(test.labels)) != k){
-    message(paste0("k=", k, " was reduced to ", length(unique(test.labels)), " in test label prediction"))}
-  
-  return(list(test.labels = test.labels))
-}

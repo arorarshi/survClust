@@ -1,14 +1,14 @@
-\name{getstats}
-\alias{getstats}
+\name{getStats}
+\alias{getStats}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-\code{getstats} computes necessary statistic after cross validation via \code{cv.survclust} 
+\code{getStats} computes necessary statistic after cross validation via \code{cv.survclust} 
 }
 \description{
-\code{getstats} calculates log rank statistic and standardixed within sum of squares across cross validated labels. Visualize it via \code{plotstats}
+\code{getStats} calculates log rank statistic and standardized pooled within sum of squares (SPWSS) across cross validated labels. Visualize it via \code{plotStats}
 }
 \usage{
-getstats<-function(cv.fit,kk=NULL, cvr=50)
+getStats<-function(cv.fit,kk=NULL, cvr=50)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

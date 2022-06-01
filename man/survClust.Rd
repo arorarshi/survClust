@@ -27,4 +27,12 @@ Arshi Arora
 
 \examples{
 
+\dontrun{
+dd <- getDist(x,survdat)
+cc <- combineDist(dd)
+#not recommended, Always use cv.survclust
+sfit <- survClust(cc, survdat, k=2)
+
+}
+
 }

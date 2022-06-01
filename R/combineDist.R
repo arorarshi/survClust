@@ -1,8 +1,27 @@
-#################################
-# combineDist
-#################################
 
-#take average
+#' Integrates weighted distance matrices
+#'
+#'@description
+#'\code{combineDist} integrates weighted distances matrices from \code{getDist}. 
+#'All data types are now collapsed into one \code{NxN} matrix. 
+
+#' @param dist.dat  list of weighted data matrices from \code{getDist}
+#' @details 
+#' \code{combineDist} integrates and does cleaning of missing pair of samples. 
+#' if \code{datasets} list had non-overlapping samples, 
+#' then \code{combineDist} retains only those samples that have full information after accounting for all data types.
+#'
+#' @return
+#' \itemize{
+#' \item{combMatFull}{A matrix. Combine normalized information across \code{m} genomic data types into \code{NxN} matrix, 
+#' where \code{N} is the union of all samples across \code{m} data types/ or samples with complete pairwise information. 
+#' Final matrix should not have any NAs}
+#' }
+#' @author Arshi Arora
+#' @examples
+#'
+#' @export
+#' 
 combineDist<-function(dist.dat){
   arr <- array(unlist(dist.dat), dim = c(nrow(dist.dat[[1]]),ncol(dist.dat[[1]]),length(dist.dat)))
   #calculate mean distance after removing NA

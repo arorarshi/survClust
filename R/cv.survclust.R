@@ -1,100 +1,105 @@
-#Runs cross validation on survclust to attain best k
-#calculate sum of squares of each simulated dataset
-do.ss.stats<-function(mm,labels){
-  ll = unique(labels)
-  mm[lower.tri(mm,diag=TRUE)]<-NA
-  tss = sum(mm, na.rm=T)
-  wss<-rep(NA, length(ll))
-  for (i in 1:length(ll)){
-    wss[i] = sum(mm[labels==ll[i], labels==ll[i]], na.rm=T)
+
+#Compute predicted test labels on survClust fit object 
+.predict_test_label<-function(all.cmd,fit,k){
+  all.cmd = as.matrix(all.cmd)
+  train.snames = names(fit$cluster)
+  test.snames = setdiff(rownames(all.cmd),train.snames)
+  
+  #where row - samples, col - genes
+  centroid = matrix(NA, nrow = k, ncol = ncol(all.cmd))
+  for (kk in 1:k) {
+    #meaning k clust has one sample. #WARNING #check
+    if(is.vector(all.cmd[names(fit$cluster)[which(fit$cluster==kk)],]) & ncol(all.cmd) > 1){
+      message(paste0("k=",k, " training cluster has one sample, prediction might be inaccurate"))
+      centroid[kk, ]=all.cmd[names(fit$cluster)[which(fit$cluster==kk)], ]
+    }
+    
+    if (!(is.null(dim(all.cmd[names(fit$cluster)[fit$cluster==kk],])))){
+      if(ncol(all.cmd)> 1){centroid[kk, ]=apply(all.cmd[names(fit$cluster)[which(fit$cluster==kk)], ], 2, mean)}
+    }
+    
+    if(ncol(all.cmd)==1){centroid[kk,] = mean(all.cmd[names(fit$cluster)[which(fit$cluster==kk)], ])}
   }
   
-  tot.withinss = sum(wss)
-  within.over.tot = tot.withinss/tss
-  return(within.over.tot)
-}
-
-get.centroid<-function (mat, labels, f)
-{
-  ul <- unique(labels)
-  if (ncol(mat) == 1) {
-    warning("cmd reduces matrix to one eigen value! Noisy data?")
-  }
-  centroids <- matrix(NA, nrow = length(ul), ncol = ncol(mat))
-  for (i in 1:length(ul)) {
-    mat.ul <- mat[names(labels)[which(labels == ul[i])], ]
-    if (is.vector(mat.ul)) {
-      centroids[i, ] = mat.ul
-    }
-    else {
-      centroids[i, ] <- apply(mat.ul, 2, mean)
-    }
-  }
-  rownames(centroids) = paste0("f", f, "_k", ul)
-  return(centroids)
-}
-
-get.relabel<-function(pattern, olabel, centroid.cluster,kk){
-  relabel<-rep(NA, length(olabel))
-  names(relabel) = names(olabel)
+  dist.whole = apply(centroid,1,function(x) as.matrix(pdist(x,all.cmd)))
   
-  for(i in 1:kk){
-    kpattern<-paste0(pattern,i)
-    idx<-which(names(centroid.cluster)==kpattern)
-    #change current label to this
-    if(length(idx)!=0){
-      change.label = centroid.cluster[idx]
-      idx2 = which(olabel == i)
-      if(length(idx2)!=0){relabel[idx2] = change.label}
-    }
-  }
-  if(any(is.na(relabel))){warning("there is a NA in relabel, something is wrong with clustering, noisy data or pick lower k?")}
-  return(relabel)
+  #assign the cluster membership
+  dist.labels = apply(dist.whole,1,which.min)
+  names(dist.labels) = rownames(all.cmd)
+  test.labels = dist.labels[test.snames]
+  
+  #is missing a class label via pdist
+  if(length(unique(test.labels)) != k){
+    message(paste0("k=", k, " was reduced to ", length(unique(test.labels)), " in test label prediction"))}
+  
+  return(list(test.labels = test.labels))
 }
 
-#this is done to provide meaning to cluster labels across folds.
-#we run kmeans on centroid vector of all the folds to determine their closeness.
-#random start -10
-cv.relabel<-function(mat, train.labels,cv.test.labels, k,fold){
+.cv_relabel<-function(mat, train.labels,cv.test.labels, k,fold){
   
   centroids<-list()
   
   for(i in 1:length(train.labels)){
-    centroids[[i]]<-get.centroid(mat, train.labels[[i]],i)
+    centroids[[i]] <- .get_centroid(mat, train.labels[[i]],i)
   }
   
-  centroids.all<-do.call(rbind.data.frame, lapply(centroids, function(x) x))
+  centroids.all <- do.call(rbind.data.frame, lapply(centroids, function(x) x))
   #do kmeans on the centroids
-  centroids.kmeans<-kmeans(centroids.all,k,nstart=20)
+  centroids.kmeans <- kmeans(centroids.all,k,nstart=20)
   #print(centroids.kmeans$cluster)
   #centroids cluster labels
-  all.cluster<-centroids.kmeans$cluster
+  all.cluster <- centroids.kmeans$cluster
   
-  relabel<-rep(NA,nrow(mat))
-  names(relabel) = rownames(mat)
+  relabel <- rep(NA,nrow(mat))
+  names(relabel) <- rownames(mat)
   
   for(i in 1:fold){
-    pattern = paste0("f",i,"_k")
-    rr<-get.relabel(pattern, cv.test.labels[[i]], all.cluster,k)
+    pattern <- paste0("f",i,"_k")
+    rr <- .get_relabel(pattern, cv.test.labels[[i]], all.cluster,k)
     relabel[names(rr)] = rr
   }
   
   return(relabel)
 }
 
-#############################
-# perform cross validation 
-#############################
-
-cv.survclust<-function(x, survdat,k,fold, cmd.k=NULL, type=NULL){
+#' performs cross validation on supervised clustering, \code{survClust} for a particular \code{k}. \code{cv.survclust} runs 
+#' 
+#' @description 
+#'\code{cv.survclust} performs \code{k} fold cross-validation, runs \code{survClust} on each training and 
+#'hold out test fold and return cross-validated supervised cluster labels.  
+#'
+#' @param datasets A list object containing \code{m} data matrices representing \code{m} different genomic data types measured in a set of \code{N~m} samples. 
+#' OR \code{\link{MultiAssayExperiment}} object of desired types of data. 
+#' For list of matrices, each matrix, the rows represent samples, and the columns represent genomic features. Each data matrix is allowed to have different samples
+#' @param survdat A matrix, containing two columns - 1st column \code{time} and 2nd column containing \code{events} information.
+#' OR this information can be provided as a part of \code{colData} \code{MultiAssayExperiment}
+#' @param k integer, choice of \code{k} to perform clustering on samples
+#' @param fold integer,  number of folds to run cross validation 
+#' @param cmd.k integer, number of dimensions used by \code{cmdscale} to perform clustering on samples. Defaults is \code{n-1}
+#' @param type Specify \code{type="mut"}, if datasets is of length \code{1} and contains \code{binary} data only.
+#'
+#' @return
+#' \itemized{
+#'  \item{cv.labels}{returns cross validated class labels for \code{k} cluster} 
+#'  \item{cv.logrank}{logrank test statistic of cross validated label}  
+#'  \item{cv.ss}{standardized pooled within-cluster sum of squares calculated from cross-validation  class labels }
+#'  }
+#' @author Arshi Arora
+#' @examples
+#'
+#' @export
+#' 
+cv.survclust<-function(datasets, survdat,k,fold, cmd.k=NULL, type=NULL){
   
   my.k <- as.numeric(k)
   fold <- as.numeric(fold)
   
   #To get an idea of total samples
-  dist.dat<-getDist(x,survdat, type=type)
+  
+  #ifMAE survdat = colData(datasets)
+  dist.dat <- getDist(datasets,survdat, type=type)
   #this for calculating ss on test labels
-  combine.dist<-combineDist(dist.dat)
+  combine.dist <- combineDist(dist.dat)
   inter <- intersect(rownames(survdat), rownames(combine.dist))
   ll <- seq(1,length(inter))
   
@@ -102,35 +107,35 @@ cv.survclust<-function(x, survdat,k,fold, cmd.k=NULL, type=NULL){
   if(is.null(cmd.k)){this.k = nrow(combine.dist)-1}
   if(!(is.null(cmd.k))){this.k = as.numeric(cmd.k)}
   
-  combine.dist.cmd<-cmdscale(combine.dist, k=this.k, add=TRUE)$points
-  clin<-survdat[inter,]
-  clin<-apply(clin,2,as.numeric)
-  clin.whole<-clin
+  combine.dist.cmd <- cmdscale(combine.dist, k=this.k, add=TRUE)$points
+  clin <- survdat[inter,]
+  clin <- apply(clin,2,as.numeric)
+  clin.whole <- clin
   rownames(clin.whole) = inter
   
   folds <- cut(seq(1,length(ll)),breaks=fold,labels=FALSE)
   ll.rand<- sample(ll,length(ll))
   
   #Perform n fold cross validation
-  cv.test.labels<-list()
+  cv.test.labels <- list()
   #cv.test.rand.index =NA
-  survfit<-list()
+  survfit <- list()
   
   for(i in 1:fold){
     #Segement your data by fold using the which() function
     test.idx <- ll.rand[which(folds==i)]
     train.idx <- setdiff(ll,test.idx)
-    train.snames = rownames(clin.whole)[train.idx]
-    clin.train<- clin.whole[train.snames,]
+    train.snames <- rownames(clin.whole)[train.idx]
+    clin.train <- clin.whole[train.snames,]
     
     #multiply by coxph abs(log(HR))
-    distwt<-getDist(x,survdat,cv=TRUE,train.snames, type=type)
-    train.dist.dat<-distwt$train
-    all.dist.dat<-distwt$all
+    distwt <- getDist(datasets,survdat,cv=TRUE,train.snames, type=type)
+    train.dist.dat <- distwt$train
+    all.dist.dat <- distwt$all
     
     #combine dist
-    train.combine.dist<-combineDist(train.dist.dat)
-    all.combine.dist<-combineDist(all.dist.dat)
+    train.combine.dist <- combineDist(train.dist.dat)
+    all.combine.dist <- combineDist(all.dist.dat)
     inter <- intersect(rownames(survdat), rownames(all.combine.dist))
     all.combine.dist = all.combine.dist[inter,inter]
     
@@ -138,25 +143,25 @@ cv.survclust<-function(x, survdat,k,fold, cmd.k=NULL, type=NULL){
     if(!(is.null(cmd.k))){cmd.k.all =as.numeric(cmd.k) }
     #as cmd is on dist, and nrow is different for all and training set
     #but multiplied with training HR
-    cmd.whole = cmdscale(all.combine.dist,k=cmd.k.all, add=TRUE)$points
+    cmd.whole <- cmdscale(all.combine.dist,k=cmd.k.all, add=TRUE)$points
     #get training fit labels
-    fit=survclust(train.combine.dist,survdat,my.k,cmd.k)
+    fit <- survClust(train.combine.dist,survdat,my.k,cmd.k)
     
     #calculate test logrank and concordance
     #we basically predict on whole
-    test =predict.test.label(cmd.whole,fit,my.k)
-    cv.test.labels[[i]] = test$test.labels
-    survfit[[i]]<-fit
+    test <- .predict_test_label(cmd.whole,fit,my.k)
+    cv.test.labels[[i]] <-  test$test.labels
+    survfit[[i]] <- fit
   }
   
-  train.labels = lapply(survfit, function(x) x$cluster)
-  cv.test.relabels<-cv.relabel(combine.dist.cmd, train.labels,cv.test.labels,my.k,fold)
-  min.labels = min(table(cv.test.relabels))
-  idx = which(min.labels <=5)
+  train.labels <- lapply(survfit, function(x) x$cluster)
+  cv.test.relabels <- .cv_relabel(combine.dist.cmd, train.labels,cv.test.labels,my.k,fold)
+  min.labels <- min(table(cv.test.relabels))
+  idx <- which(min.labels <=5)
   if (length(idx)!=0){message(paste0("k= ", my.k, " has 5 or few samples in cluster solution"))}
   
   message(paste0("finished ", fold, " cross validation, total samples-", length(cv.test.relabels)))
-  cv.test.relabels = cv.test.relabels[rownames(clin.whole)]
+  cv.test.relabels <- cv.test.relabels[rownames(clin.whole)]
   if (length(unique(cv.test.relabels)) != my.k){warning(paste0("Test labels not equal to chosen k ",my.k)) }
   
   #if everything collapses after test relabeling
@@ -166,9 +171,9 @@ cv.survclust<-function(x, survdat,k,fold, cmd.k=NULL, type=NULL){
   }
   
   if (length(unique(cv.test.relabels)) !=1){cv.all.logrank = survdiff(Surv(clin.whole[names(cv.test.relabels),1], clin.whole[names(cv.test.relabels),2]) ~ cv.test.relabels)$chisq}
-  cv.all.conc = summary(coxph(Surv(clin.whole[names(cv.test.relabels),1], clin.whole[names(cv.test.relabels),2]) ~ cv.test.relabels))$concordance[1]
-  cv.test.ss<-do.ss.stats(combine.dist, cv.test.relabels)
-  cv.fit = list(cv.labels = cv.test.relabels, cv.logrank = cv.all.logrank, cv.concordance = cv.all.conc, cv.ss = cv.test.ss)
+  #cv.all.conc <- summary(coxph(Surv(clin.whole[names(cv.test.relabels),1], clin.whole[names(cv.test.relabels),2]) ~ cv.test.relabels))$concordance[1]
+  cv.test.ss <- get_spwss_stats(combine.dist, cv.test.relabels)
+  cv.fit <- list(cv.labels = cv.test.relabels, cv.logrank = cv.all.logrank, cv.concordance = cv.all.conc, cv.ss = cv.test.ss)
   return(cv.fit)
   
 }
