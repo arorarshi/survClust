@@ -79,24 +79,45 @@
 #' @param type Specify \code{type="mut"}, if datasets is of length \code{1} and contains \code{binary} data only.
 #'
 #' @return
-#' \itemized{
+#' \itemize{
 #'  \item{cv.labels}{returns cross validated class labels for \code{k} cluster} 
 #'  \item{cv.logrank}{logrank test statistic of cross validated label}  
-#'  \item{cv.ss}{standardized pooled within-cluster sum of squares calculated from cross-validation  class labels }
+#'  \item{cv.spwss}{standardized pooled within-cluster sum of squares calculated from cross-validation  class labels }
 #'  }
 #' @author Arshi Arora
 #' @examples
 #'
 #' @export
 #' 
-cv.survclust<-function(datasets, survdat,k,fold, cmd.k=NULL, type=NULL){
+cv.survclust<-function(datasets, survdat=NULL,k,fold, cmd.k=NULL, type=NULL){
   
   my.k <- as.numeric(k)
   fold <- as.numeric(fold)
   
-  #To get an idea of total samples
+  #checks for mae
+  if(is(datasets, "MultiAssayExeriment")){survdat = colData(datasets)}
+  #mae forces survdat to have rownames. 
   
-  #ifMAE survdat = colData(datasets)
+  if(is.null(survdat))
+    stop("if datasets are provided as list of matrices, you need to provide survival data\n
+           as a matrix OR MAE object lacks colData and survival information")
+  if(length(unique(survdat[,2]))==1)
+    stop("no deaths or censor events found in the survival data")
+  
+  # add other checks
+  if (is.list(datasets) == TRUE & !(is(datasets,"MultiAssayExperiment"))){
+    #convert everything to numeric - force user to provide a numeric matrix
+    #dat<-lapply(datasets, function(x) as.data.frame(aaply(x,1,as.numeric,.drop=FALSE)) )
+    rnames <- unlist(lapply(datasets, function(x) rownames(x)))
+    rnames <- unique(rnames)
+    
+    if(is.null(rnames))
+      stop("rowanmes=NULL, add sample names to matrix of datasets list object")
+    
+    if(is.null(rownames(survdat)))
+      stop("rowanmes(survdat) cannot be NULL")
+  }
+  
   dist.dat <- getDist(datasets,survdat, type=type)
   #this for calculating ss on test labels
   combine.dist <- combineDist(dist.dat)
@@ -172,8 +193,8 @@ cv.survclust<-function(datasets, survdat,k,fold, cmd.k=NULL, type=NULL){
   
   if (length(unique(cv.test.relabels)) !=1){cv.all.logrank = survdiff(Surv(clin.whole[names(cv.test.relabels),1], clin.whole[names(cv.test.relabels),2]) ~ cv.test.relabels)$chisq}
   #cv.all.conc <- summary(coxph(Surv(clin.whole[names(cv.test.relabels),1], clin.whole[names(cv.test.relabels),2]) ~ cv.test.relabels))$concordance[1]
-  cv.test.ss <- get_spwss_stats(combine.dist, cv.test.relabels)
-  cv.fit <- list(cv.labels = cv.test.relabels, cv.logrank = cv.all.logrank, cv.concordance = cv.all.conc, cv.ss = cv.test.ss)
+  cv.test.spwss <- get_spwss_stats(combine.dist, cv.test.relabels)
+  cv.fit <- list(cv.labels = cv.test.relabels, cv.logrank = cv.all.logrank, cv.spwss = cv.test.spwss)
   return(cv.fit)
   
 }

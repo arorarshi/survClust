@@ -4,6 +4,7 @@
 #' @param labels class labels 
 #'
 #' @return spwss metric for specified class labels over distance matrix
+#' @author Arshi Arora
 #' @export
 
 get_spwss_stats<-function(dist_mat,labels){

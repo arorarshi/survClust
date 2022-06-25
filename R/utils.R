@@ -1,15 +1,13 @@
 
 .getWeights<-function(mat, survdat,cv=FALSE, train.snames=NULL){
-  #add a check for missing rownames
-  if(is.null(rownames(mat)) | is.null(rownames(survdat))){stop("rownames required in survival and data matrix")}
   #how can we compute faster HRs, apply is faster than for 
   
-  #always intersect with survdat
-  inter <- intersect(rownames(survdat),rownames(mat))
-  mat <- mat[inter,,drop=FALSE]
-  survdat <- survdat[inter,]
-  
   if(!cv){
+    
+    #always intersect with survdat
+    inter <- intersect(rownames(survdat),rownames(mat))
+    mat = mat[inter,,drop=FALSE]
+    survdat = survdat[inter,]
     
     #calculate survobj upfront
     #set infinite HR to a small value, and NA to 0
@@ -34,6 +32,9 @@
   }
   
   if(cv){
+    inter <- intersect(rownames(survdat), intersect(rownames(mat),train.snames))
+    mat.train <- mat[inter,,drop=FALSE]
+    survdat = survdat[inter,]
     
     #calculate survobj upfront
     survobj<-survival::Surv(as.numeric(survdat[,1]),as.numeric(survdat[,2]))
@@ -62,7 +63,7 @@
   
 }
 
-.getWeights_mae(datasets, cv, train.snames){
+.getWeights_mae<- function(datasets, cv, train.snames){
   
   mae_assays <- assays(datasets)
   dat_wt_mae <- lapply(mae_assays, 

@@ -18,7 +18,7 @@
 #' Final matrix should not have any NAs}
 #' }
 #' @author Arshi Arora
-#' @examples
+#' 
 #'
 #' @export
 #' 

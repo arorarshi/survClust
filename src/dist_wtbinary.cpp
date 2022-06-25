@@ -1,3 +1,10 @@
+
+//'Calculates distance on weighted matrix for binary(mutation) datatype. Called internally by getDist, See type in getDist. 
+//'
+//'@param ww weighted data matrix.
+//'@export
+
+
 #include <Rcpp.h>
 using namespace Rcpp;
 

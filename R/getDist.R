@@ -35,14 +35,16 @@
 
 getDist<-function(datasets,survdat=NULL,cv=FALSE,train.snames=NULL,type=NULL){
   
+  if(is(datasets, "MultiAssayExeriment")){survdat = colData(datasets)}
+  if(is.null(survdat))
+    stop("if datasets are provided as list of matrices, you need to provide survival data\n
+           as a matrix OR MAE object lacks colData and survival information")
+  if(length(unique(survdat[,2]))==1)
+    stop("no deaths or censor events found in the survival data")
+  
   # add other checks
-  if (is.list(datasets) == TRUE){
-    if(is.null(survdat))
-      stop("if datasets are provided as list of matrices, you need to provide survival data\n
-           as a matrix")
-    if(length(unique(survdat[,2]))==1)
-    stop("no deaths or censor events found")
-    
+  if (!(is(datasets,"MultiAssayExperiment"))){ if(!is.list(datasets)) stop("input data types in list")}
+  if (is.list(datasets) & !(is(datasets,"MultiAssayExperiment"))){
     #convert everything to numeric - force user to provide a numeric matrix
     #dat<-lapply(datasets, function(x) as.data.frame(aaply(x,1,as.numeric,.drop=FALSE)) )
     rnames <- unlist(lapply(datasets, function(x) rownames(x)))
@@ -51,11 +53,16 @@ getDist<-function(datasets,survdat=NULL,cv=FALSE,train.snames=NULL,type=NULL){
     if(is.null(rnames))
       stop("rowanmes=NULL, add sample names to matrix of datasets list object")
     
+    if(is.null(rownames(survdat)))
+      stop("rowanmes(survdat) cannot be NULL")
+    
     dat.wt <- lapply(datasets, function(x) .getWeights(x,survdat,cv,train.snames))
   }
   
+  
+  
   #check if mae has been passed
-  if(isMAE(datasets)){
+  if(is(datasets,"MultiAssayExperiment")){
     
     dat.wt <- .getWeights_mae(datasets, cv, train.snames)
   }
@@ -71,7 +78,7 @@ getDist<-function(datasets,survdat=NULL,cv=FALSE,train.snames=NULL,type=NULL){
   }
   
   if(cv==FALSE){
-    dat.dist <- getUnionDist(rnames, dat.wt, type)
+    dat.dist <- .getUnionDist(rnames, dat.wt, type)
     return(dat.dist)
   }
   

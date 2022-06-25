@@ -18,7 +18,7 @@
 #'  }
 #'  
 #' @author Arshi Arora
-#' @examples
+#' 
 #' @export
 #' 
 consensus_summary<-function(pick_k, dist.dat, cv.fit, survdat, plot.km=TRUE,...){

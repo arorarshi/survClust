@@ -5,6 +5,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // dist_wtbinary
 Rcpp::NumericMatrix dist_wtbinary(Rcpp::NumericMatrix ww);
 RcppExport SEXP _survClust_dist_wtbinary(SEXP wwSEXP) {
@@ -16,20 +21,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// rcpp_hello_world
-List rcpp_hello_world();
-RcppExport SEXP _survClust_rcpp_hello_world() {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(rcpp_hello_world());
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_survClust_dist_wtbinary", (DL_FUNC) &_survClust_dist_wtbinary, 1},
-    {"_survClust_rcpp_hello_world", (DL_FUNC) &_survClust_rcpp_hello_world, 0},
     {NULL, NULL, 0}
 };
 

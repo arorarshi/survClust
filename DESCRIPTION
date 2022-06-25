@@ -4,7 +4,7 @@ Title: Identification of clinically relevant genomic subtypes using outcome weig
 Version: 1.0
 Date: 2019-12-29
 Author: Arshi Arora
-Maintainer: Arshi Arora <aroraa@mskcc.org>
+Maintainer: Arshi Arora <arshiaurora@gmail.com>
 Description: survClust is an outcome weighted clustering algorithm used to classify multi-omic samples on their available time to event information. 
 License: MIT + file LICENSE
 Imports: 
@@ -13,3 +13,4 @@ Imports:
     pdist,
     survival
 LinkingTo: Rcpp
+RoxygenNote: 7.2.0

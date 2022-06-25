@@ -46,7 +46,7 @@ cv_voting<-function(cv.fit,dat.dist,pick_k, cmd.k=NULL, pick_k.test=TRUE, minlab
   
   centroids<-list()
   for (i in 1:cv.rounds){
-    centroids[[i]]<-get_centroid(cmd.mat, cv.fit[[i]]$cv.labels,i)
+    centroids[[i]] <- .get_centroid(cmd.mat, cv.fit[[i]]$cv.labels,i)
   }
   
   centroids.all<-do.call(rbind.data.frame, lapply(centroids, function(x) x))
@@ -58,7 +58,7 @@ cv_voting<-function(cv.fit,dat.dist,pick_k, cmd.k=NULL, pick_k.test=TRUE, minlab
   relabels<-list()
   for(i in 1:cv.rounds){
     pattern = paste0("f",i,"_k")
-    relabels[[i]] <- get_relabel(pattern, cv.fit[[i]]$cv.labels, all.cluster,pick_k)
+    relabels[[i]] <- .get_relabel(pattern, cv.fit[[i]]$cv.labels, all.cluster,pick_k)
     
   }
   relabels.all<-do.call(rbind.data.frame, lapply(relabels, function(x) x))

@@ -13,7 +13,7 @@
 #'
 #' @return
 #' \itemize{
-#'  \item{fit} { returns a list , \code{fit} consisting of all clustering samples along with 
+#'  \item{fit} { returns a list , \code{fit} consisting of all clustering samples as in \code{kmeans} 
 #'  \code{fit.lr}, computed logrank statistic between \code{k} clusters}
 #' }
 #' 
