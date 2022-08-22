@@ -2,7 +2,7 @@
 % Please edit documentation in R/cv_voting.R
 \name{cv_voting}
 \alias{cv_voting}
-\title{For a \code{survClust} fit, return consolidated labels across rounds of cross validation for a specific \code{k}. 
+\title{For a \code{survClust} fit, return consolidated labels across rounds of cross validation for a specific \code{k}.
 Note that cv.fit already has consolidated class labels across folds}
 \usage{
 cv_voting(
@@ -31,6 +31,6 @@ cv_voting(
 final.labels consolidated class labels over rounds of cross-validation
 }
 \description{
-For a \code{survClust} fit, return consolidated labels across rounds of cross validation for a specific \code{k}. 
+For a \code{survClust} fit, return consolidated labels across rounds of cross validation for a specific \code{k}.
 Note that cv.fit already has consolidated class labels across folds
 }

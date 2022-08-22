@@ -1,0 +1,190 @@
+---
+title: "An introduction to **survClust package**"
+author: Arshi Arora <br>
+        Department of Epidemiology and Biostatistics, MSKCC
+date: "`r Sys.Date()`"
+output: 
+  BiocStyle::html_document:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{An introduction to survClust package}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Overview
+
+### The tldr version 
+
+**survClust**$^1$ is an outcome weighted integrative supervised clustering algorithm, designed to classify patients according to their molecular as well as time-event or end point of interest. Until now, sub-typing in cancer biology has relied heavily upon clustering/mining of molecular data alone. We present classification of samples on molecular data supervised by time-event data like Overall Survival (OS), Progression Free Survival etc. 
+
+Below is the workflow of proposed survClust method:
+
+`getDist` - Compute a weighted distance matrix based on outcome across given `m` data types. Standardization and accounting for non-overlapping samples is also accomplished in this step.
+
+`combineDist` - Integrate `m` data types by averaging over `m` weighted distance matrices.
+
+`survClust` and `cv.survclust` - Cluster integrated weighted distance matrices via `survClust`. Optimal `k` is estimated via cross-validation using `cv.survclust`. Cross-validated results are assessed over the following performance metrics - the **logrank statistic, standardized pooled within-cluster sum of squares (SPWSS)** and cluster solutions with **class size less than 5 samples**.
+
+Note: 
+
+(1) The input datatypes needs to be carefully pre-processed. See the data pre-processing section. 
+(2) `cv.survclust` is a wrapper function that cross-validates and outputs cluster assignments. If you run without cross validation and just the commands on its own (`getDist`, `combineDist` and `survClust`), you are over-fitting!
+
+In this document, we use the TCGA UVM data set and a simulation example to demonstrate how to use survClust to perform integrative supervised clustering. 
+
+All TCGA data has been downloaded from the TCGA pancancer paper[The Cancer Genome Atlas Research Network., Weinstein, J., Collisson, E. et al. The Cancer Genome Atlas Pan-Cancer analysis project. Nat Genet 45, 1113–1120 (2013).](https://doi.org/10.1038/ng.2764)
+
+### Bit more 
+
+
+## Data and Pre-processing 
+
+The data and pre-processing steps are largely followed from iCluster manual by - iCluster (Mo Q, Shen R (2022). iClusterPlus: Integrative clustering of multi-type genomic data. R package version 1.32.0.). The pre-processing steps that we used in the manuscript are described here. 
+
+* Copy Number data was segmented using CBS$^4$ and reduced to non-redundant regions of alterations using the `CNregion` function in `iClusterPlus` with default epsilon of `0.001`, keeping in mind that the total numbers of features don’t exceed 10,000. See below and preprocessed data is provided with the package - `uvm_dat.Rds` Commented code goes over how we actually processed from the raw data. 
+
+* For DNA methylation, mRNA expression and miRNA expression, if a certain feature had more than 20% missing data, that feature was removed and remaining were used for analysis. 
+
+* For mRNA expression, we further removed genes having a mean expression lower than the threshold of mean expression of lower 10% quantile. 
+
+* Similarly, methylation probes with mean beta values < 0.1 and > 0.9 were discarded. 
+
+* For mutation data, we first filtered variants that were classified as `SILENT`. Secondly, genes harboring mutants in less than 1% of the samples were also removed. For our case study of UVM, we just removed singleton mutations. See below and preprocessed data is provided with the package - `uvm_dat.Rds`
+
+```{r}
+
+# DO NOT RUN. Use provided dataset
+# Process mutation maf data
+# maf = data.table::fread("mc3.v0.2.8.PUBLIC.maf.gz", header = T)
+# maf_filter = maf %>% filter(FILTER == "PASS",
+#                            Variant_Classification != "Silent")
+
+# few lines of code in tidyR to convert maf to a binary file
+# maf_binary <- maf_filter %>%
+#   select(Tumor_Sample_Barcode, Hugo_Symbol) %>%
+#   distinct() %>%
+#   pivot_wider(names_from = "Hugo_Symbol",
+#               values_from = 'Hugo_Symbol',
+#               values_fill = 0, values_fn = function(x) 1)
+# maf_binary$tcga_short = substr(maf_binary$Tumor_Sample_Barcode, 1, 12)
+
+# Process clinical file
+# tcga_clin = readxl::read_excel("TCGA-CDR-SupplementalTableS1.xlsx", sheet=1, col_names = TRUE)
+#
+# uvm_clin <- tcga_clin %>% filter(type == "UVM")
+# uvm_maf_binary <- maf_binary %>%
+#   filter(tcga_short %in% uvm_clin$bcr_patient_barcode) %>%
+#   select(-Tumor_Sample_Barcode)
+# rnames = uvm_maf_binary$tcga_short
+#
+# uvm_maf = uvm_maf_binary %>% select(-tcga_short) %>%
+#   apply(., 2, as.numeric)
+
+# Remove singletons
+# gene_sum = apply(uvm_maf,2,sum)
+# idx = which(gene_sum > 1)
+#
+# uvm_maf = uvm_maf[,idx]
+# rownames(uvm_maf) = rnames
+#
+
+# uvm_survdat = uvm_clin %>% select(OS.time, OS) %>%
+#   apply(., 2, as.numeric)
+#
+# rownames(uvm_survdat) = uvm_clin$bcr_patient_barcode
+
+# process CN
+# library(cluster)#pam function for derive medoid
+# library(GenomicRanges) #interval overlap to remove CNV
+# library(iClusterPlus)
+#
+# seg = read.delim(file="broad.mit.edu_PANCAN_Genome_Wide_SNP_6_whitelisted.seg", header=T,sep="\t", as.is=T)
+#
+# pp = substr(seg$Sample,13,16)
+# seg.idx = c(grep("-01A",pp),grep("-01B",pp),grep("-03A",pp))
+# only take tumors
+# seg.idx = c(grep("-01A",pp),grep("-01B",pp))
+# seg= seg[seg.idx,]
+
+# seg$Sample= substr(seg[,1],1,12)
+#
+# uvm_seg = seg[seg$Sample %in% uvm_clin$bcr_patient_barcode,]
+
+# colnames(uvm_seg)=c("Sample", "Chromosome", "Start", "End", "Num_Probes", "Segment_Mean")
+# pass epsillon as 0.001 default or user
+# reducedMseg=CNregions(ss_seg,epsilon=0.001,adaptive=F,rmCNV=F, cnv=NULL, frac.overlap=0.5, rmSmallseg=T, nProbes=75)
+
+#uvm_dat <- list(uvm_mut = uvm_maf, uvm_cn = uvm_seg)
+
+load("../data/uvm_dat.Rdata")
+
+names(uvm_dat)
+
+uvm_dat$uvm_mut[1:5,1:5]
+
+uvm_dat$uvm_cn[1:5,1:5]
+
+hist(uvm_dat$uvm_cn)
+
+#uvm_survdat = load("../data/uvm_survdat.Rdata")
+#head(uvm_survdat)
+
+```
+
+
+## Supervised integrative cluster analysis 
+
+To run supervised integrative clustering analysis - we will be calling `cv.survclust`. 
+
+### UVM data 
+
+### simulation example
+
+### Bonus - UVM mutation data alone 
+
+## Picking k
+
+## Results 
+
+The figure sizes have been customised so that you can easily put two images side-by-side. 
+
+```{r, fig.show='hold'}
+plot(1:10)
+plot(10:1)
+```
+
+You can enable figure captions by `fig_caption: yes` in YAML:
+
+    output:
+      rmarkdown::html_vignette:
+        fig_caption: yes
+
+Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
+
+## Appendix
+
+### Create simulation dataset 
+
+### Process TCGA dataset 
+
+You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
+
+```{r, echo=FALSE, results='asis'}
+knitr::kable(head(mtcars, 10))
+```
+
+
+## Refrences
+
+1. survclust 
+2. tcga pancan 
+3. icluster 
+4. cbs 

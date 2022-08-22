@@ -1,6 +1,3 @@
-
-
-
 #' Calculates weighted distance matrix of multiple genomic data types 
 #'
 #' @description
@@ -18,72 +15,72 @@
 #' @param train.snames required if \code{cv=TRUE}. A vector of sample names treated as training samples.
 #' @param type \code{NULL}. Specify \code{type="mut"}, if datasets is of length \code{1} and contains \code{binary} data only. See \code{details}
 #'
-#'@details
-#'\code{getDist} allows for continuous and binary data type(s) in a matrix passed as a list. 
-#'If the list only has a binary matrix data type. Set \code{type="mut"}. All data types are standardized internally. 
-#'All data types are not expected to have common samples. Non-overlapping samples within data types are replaced with NA, and returned weighted matrix consists of union of all the samples.
+#' @details
+#' \code{getDist} allows for continuous and binary data type(s) in a matrix passed as a list. 
+#' If the list only has a binary matrix data type. Set \code{type="mut"}. All data types are standardized internally. 
+#' All data types are not expected to have common samples. Non-overlapping samples within data types are replaced with NA, and returned weighted matrix consists of union of all the samples.
 #' @return
 #' \itemize{
 #'  \item{cv=FALSE,dist.dat}{returns a list of weighted data matrix/matrices, \code{dist.dat}}
 #'  \item{cv=TRUE,dist.dat=list(train, all)}{ returns a list of training \code{train} weighted data matrix. 
 #'  And the whole matrix weighed according to the weights computed on the training dataset \code{all}.  }
 #'  }
-#'  @author Arshi Arora
-#'  @examples
+#'  
+#' @author Arshi Arora
+#' 
+#' @importFrom MultiAssayExperiment MultiAssayExperiment
 #' @export
-
-
 getDist<-function(datasets,survdat=NULL,cv=FALSE,train.snames=NULL,type=NULL){
-  
-  if(is(datasets, "MultiAssayExeriment")){survdat = colData(datasets)}
-  if(is.null(survdat))
-    stop("if datasets are provided as list of matrices, you need to provide survival data\n
+    
+    if(is(datasets, "MultiAssayExperiment")){survdat <- colData(datasets)}
+    if(is.null(survdat))
+        stop("if datasets are provided as list of matrices, you need to provide survival data\n
            as a matrix OR MAE object lacks colData and survival information")
-  if(length(unique(survdat[,2]))==1)
-    stop("no deaths or censor events found in the survival data")
-  
-  # add other checks
-  if (!(is(datasets,"MultiAssayExperiment"))){ if(!is.list(datasets)) stop("input data types in list")}
-  if (is.list(datasets) & !(is(datasets,"MultiAssayExperiment"))){
-    #convert everything to numeric - force user to provide a numeric matrix
-    #dat<-lapply(datasets, function(x) as.data.frame(aaply(x,1,as.numeric,.drop=FALSE)) )
-    rnames <- unlist(lapply(datasets, function(x) rownames(x)))
-    rnames <- unique(rnames)
+    if(length(unique(survdat[,2]))==1)
+        stop("no deaths or censor events found in the survival data")
     
-    if(is.null(rnames))
-      stop("rowanmes=NULL, add sample names to matrix of datasets list object")
+    # add other checks
+    if (!(is(datasets,"MultiAssayExperiment"))){ if(!is.list(datasets)) stop("input data types in list")}
+    if (is.list(datasets) & !(is(datasets,"MultiAssayExperiment"))){
+        #convert everything to numeric - force user to provide a numeric matrix
+        #dat<-lapply(datasets, function(x) as.data.frame(aaply(x,1,as.numeric,.drop=FALSE)) )
+        rnames <- unlist(lapply(datasets, function(x) rownames(x)))
+        rnames <- unique(rnames)
+        
+        if(is.null(rnames))
+            stop("rowanmes=NULL, add sample names to matrix of datasets list object")
+        
+        if(is.null(rownames(survdat)))
+            stop("rowanmes(survdat) cannot be NULL")
+        
+        dat.wt <- lapply(datasets, function(x) .getWeights(x,survdat,cv,train.snames))
+    }
     
-    if(is.null(rownames(survdat)))
-      stop("rowanmes(survdat) cannot be NULL")
     
-    dat.wt <- lapply(datasets, function(x) .getWeights(x,survdat,cv,train.snames))
-  }
-  
-  
-  
-  #check if mae has been passed
-  if(is(datasets,"MultiAssayExperiment")){
     
-    dat.wt <- .getWeights_mae(datasets, cv, train.snames)
-  }
+    #check if mae has been passed
+    if(is(datasets,"MultiAssayExperiment")){
+        
+        dat.wt <- .getWeights_mae(datasets, cv, train.snames)
+    }
     
-  if(cv){
-    dat.all.wt <- lapply(dat.wt, function(x) x$all)
-    dat.train.wt <- lapply(dat.wt, function(x) x$train)
+    if(cv){
+        dat.all.wt <- lapply(dat.wt, function(x) x$all)
+        dat.train.wt <- lapply(dat.wt, function(x) x$train)
+        
+        dat.all.dist <- .getUnionDist(rnames, dat.all.wt,type)
+        dat.train.dist <- .getUnionDist(train.snames, dat.train.wt, type)
+        dat.dist <- list(train=dat.train.dist, all=dat.all.dist)
+        return(dat.dist)
+    }
     
-    dat.all.dist <- .getUnionDist(rnames, dat.all.wt,type)
-    dat.train.dist <- .getUnionDist(train.snames, dat.train.wt, type)
-    dat.dist <- list(train=dat.train.dist, all=dat.all.dist)
-    return(dat.dist)
-  }
-  
-  if(cv==FALSE){
-    dat.dist <- .getUnionDist(rnames, dat.wt, type)
-    return(dat.dist)
-  }
-  
-  
-  
+    if(cv==FALSE){
+        dat.dist <- .getUnionDist(rnames, dat.wt, type)
+        return(dat.dist)
+    }
+    
+    
+    
 }
 
 

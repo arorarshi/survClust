@@ -21,11 +21,11 @@ consensus_summary(pick_k, dist.dat, cv.fit, survdat, plot.km = TRUE, ...)
 }
 \value{
 \itemize{
- \item{cv.labels}{cross validated labels after consolidating cross validation results of optimal \code{k}}
- }
+\item{cv.labels}{cross validated labels after consolidating cross validation results of optimal \code{k}}
+}
 }
 \description{
-After plotting boxplots via \code{plotStats}, choose the optimal \code{pick_k} and pass it through \code{consensus_summary} 
+After plotting boxplots via \code{plotStats}, choose the optimal \code{pick_k} and pass it through \code{consensus_summary}
 to get consensus class labels from cross validation via \code{cv.survclust}
 }
 \author{

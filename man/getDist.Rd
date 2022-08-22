@@ -7,14 +7,14 @@
 getDist(datasets, survdat = NULL, cv = FALSE, train.snames = NULL, type = NULL)
 }
 \arguments{
-\item{datasets}{A list object containing \code{m} data matrices representing \code{m} different genomic data types measured in a set of \code{N~m} samples. 
-OR \code{\link{MultiAssayExperiment}} object of desired types of data. 
+\item{datasets}{A list object containing \code{m} data matrices representing \code{m} different genomic data types measured in a set of \code{N~m} samples.
+OR \code{\link{MultiAssayExperiment}} object of desired types of data.
 For list of matrices, each matrix, the rows represent samples, and the columns represent genomic features. Each data matrix is allowed to have different samples}
 
 \item{survdat}{A matrix, containing two columns - 1st column \code{time} and 2nd column containing \code{events} information.
 OR this information can be provided as a part of \code{colData} \code{MultiAssayExperiment}}
 
-\item{cv}{logical. If \code{TRUE}, \code{train.names} cannot be NULL. Cross-validation will be performed on \code{train.names} samples, 
+\item{cv}{logical. If \code{TRUE}, \code{train.names} cannot be NULL. Cross-validation will be performed on \code{train.names} samples,
 and the dataset will be split into training and test, and each respective matrices will be returned.}
 
 \item{train.snames}{required if \code{cv=TRUE}. A vector of sample names treated as training samples.}
@@ -23,20 +23,21 @@ and the dataset will be split into training and test, and each respective matric
 }
 \value{
 \itemize{
- \item{cv=FALSE,dist.dat}{returns a list of weighted data matrix/matrices, \code{dist.dat}}
- \item{cv=TRUE,dist.dat=list(train, all)}{ returns a list of training \code{train} weighted data matrix. 
- And the whole matrix weighed according to the weights computed on the training dataset \code{all}.  }
- }
- @author Arshi Arora
- @examples
+\item{cv=FALSE,dist.dat}{returns a list of weighted data matrix/matrices, \code{dist.dat}}
+\item{cv=TRUE,dist.dat=list(train, all)}{ returns a list of training \code{train} weighted data matrix.
+And the whole matrix weighed according to the weights computed on the training dataset \code{all}.  }
+}
 }
 \description{
-Given multiple genomic data types (e.g., gene expression, copy number, DNA methylation, miRNA expression (continuous) and mutation (binary)) measured across samples, 
-allowing for missing values (NA) and missing samples,  \code{getDist} calculates the survival weighted distance metric among samples. 
+Given multiple genomic data types (e.g., gene expression, copy number, DNA methylation, miRNA expression (continuous) and mutation (binary)) measured across samples,
+allowing for missing values (NA) and missing samples,  \code{getDist} calculates the survival weighted distance metric among samples.
 Used as an input to, \code{combineDist()}.
 }
 \details{
-\code{getDist} allows for continuous and binary data type(s) in a matrix passed as a list. 
-If the list only has a binary matrix data type. Set \code{type="mut"}. All data types are standardized internally. 
+\code{getDist} allows for continuous and binary data type(s) in a matrix passed as a list.
+If the list only has a binary matrix data type. Set \code{type="mut"}. All data types are standardized internally.
 All data types are not expected to have common samples. Non-overlapping samples within data types are replaced with NA, and returned weighted matrix consists of union of all the samples.
+}
+\author{
+Arshi Arora
 }

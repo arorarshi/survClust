@@ -23,17 +23,17 @@
 #' 
 consensus_summary<-function(pick_k, dist.dat, cv.fit, survdat, plot.km=TRUE,...){
   
-  cv.labels = cv_voting(cv.fit, dist.dat, pick_k)
+  cv.labels <- cv_voting(cv.fit, dist.dat, pick_k)
   print("cross validated labels:")
   print(table(cv.labels))
   
   if(plot.km==TRUE){
     
-    inter<-intersect(rownames(survdat), names(cv.labels))
-    ff = cv.labels[inter]; survdat = survdat[inter,]
-    ff = as.factor(ff)
+    inter <- intersect(rownames(survdat), names(cv.labels))
+    ff <- cv.labels[inter]; survdat = survdat[inter,]
+    ff <- as.factor(ff)
     km=survfit(Surv(survdat[,1], survdat[,2])~ff)
-    plot(km,mark.time=T,xlab="Time",col=1:length(unique(cv.labels)),main="cross validated solution",bty="l", ...)
+    plot(km,mark.time=TRUE,xlab="Time",col=1:length(unique(cv.labels)),main="cross validated solution",bty="l", ...)
     legend("bottomleft", paste0("c",1:length(unique(cv.labels))), bty="n", lty=1, col=1:length(unique(cv.labels)))
     
   }

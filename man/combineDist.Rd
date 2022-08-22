@@ -11,18 +11,18 @@ combineDist(dist.dat)
 }
 \value{
 \itemize{
-\item{combMatFull}{A matrix. Combine normalized information across \code{m} genomic data types into \code{NxN} matrix, 
-where \code{N} is the union of all samples across \code{m} data types/ or samples with complete pairwise information. 
+\item{combMatFull}{A matrix. Combine normalized information across \code{m} genomic data types into \code{NxN} matrix,
+where \code{N} is the union of all samples across \code{m} data types/ or samples with complete pairwise information.
 Final matrix should not have any NAs}
 }
 }
 \description{
-\code{combineDist} integrates weighted distances matrices from \code{getDist}. 
+\code{combineDist} integrates weighted distances matrices from \code{getDist}.
 All data types are now collapsed into one \code{NxN} matrix.
 }
 \details{
-\code{combineDist} integrates and does cleaning of missing pair of samples. 
-if \code{datasets} list had non-overlapping samples, 
+\code{combineDist} integrates and does cleaning of missing pair of samples.
+if \code{datasets} list had non-overlapping samples,
 then \code{combineDist} retains only those samples that have full information after accounting for all data types.
 }
 \author{

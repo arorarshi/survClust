@@ -13,21 +13,19 @@
 #' and if any class label has less than 5 samples
 #' @author Arshi Arora
 #' @export
-#'
-#' @examples
 plotStats<-function(out.getStats,labels=NULL,...){
   
   if(is.null(labels)){labels=2:8}
-  dots<-list(...)
+  dots <- list(...)
   #if(is.null(dots$main)){dots$main = paste0(nrow(out.getStats$lr)," datapoints") }
   
   par(mfrow=c(2,2))
-  boxplot(out.getStats$lr, frame.plot=F, names=labels, ylab="logrank",outline=F,...)
+  boxplot(out.getStats$lr, frame.plot=FALSE, names=labels, ylab="logrank",outline=FALSE,...)
   
   #boxplot of within over tot across datasets
-  boxplot(out.getStats$spwss, frame.plot=F, names=labels, ylab="SPWSS", ...)
+  boxplot(out.getStats$spwss, frame.plot=FALSE, names=labels, ylab="SPWSS", ...)
   
-  plot(out.getStats$bad.sol, frame.plot=F,type='o', pch=8, ylab="solutions <= 5",xlab="k",xaxt="n",lwd=2,cex=1,...)
+  plot(out.getStats$bad.sol, frame.plot=FALSE,type='o', pch=8, ylab="solutions <= 5",xlab="k",xaxt="n",lwd=2,cex=1,...)
   axis(1, at=1:length(labels), labels=labels)
 }
 

@@ -7,8 +7,8 @@
 cv.survclust(datasets, survdat = NULL, k, fold, cmd.k = NULL, type = NULL)
 }
 \arguments{
-\item{datasets}{A list object containing \code{m} data matrices representing \code{m} different genomic data types measured in a set of \code{N~m} samples. 
-OR \code{\link{MultiAssayExperiment}} object of desired types of data. 
+\item{datasets}{A list object containing \code{m} data matrices representing \code{m} different genomic data types measured in a set of \code{N~m} samples.
+OR \code{\link{MultiAssayExperiment}} object of desired types of data.
 For list of matrices, each matrix, the rows represent samples, and the columns represent genomic features. Each data matrix is allowed to have different samples}
 
 \item{survdat}{A matrix, containing two columns - 1st column \code{time} and 2nd column containing \code{events} information.
@@ -24,13 +24,13 @@ OR this information can be provided as a part of \code{colData} \code{MultiAssay
 }
 \value{
 \itemize{
- \item{cv.labels}{returns cross validated class labels for \code{k} cluster} 
- \item{cv.logrank}{logrank test statistic of cross validated label}  
- \item{cv.spwss}{standardized pooled within-cluster sum of squares calculated from cross-validation  class labels }
- }
+\item{cv.labels}{returns cross validated class labels for \code{k} cluster}
+\item{cv.logrank}{logrank test statistic of cross validated label}
+\item{cv.spwss}{standardized pooled within-cluster sum of squares calculated from cross-validation  class labels }
+}
 }
 \description{
-\code{cv.survclust} performs \code{k} fold cross-validation, runs \code{survClust} on each training and 
+\code{cv.survclust} performs \code{k} fold cross-validation, runs \code{survClust} on each training and
 hold out test fold and return cross-validated supervised cluster labels.
 }
 \author{

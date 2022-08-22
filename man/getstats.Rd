@@ -16,16 +16,16 @@ getStats(cv.fit, kk = 8, cvr = 50)
 \value{
 A list of the following
 \itemize{
- \item{lr} {log rank statistic}
- \item{spwss} {standardized pooled within sum of squares}
- \item{bad.sol} {number of solutions for each \code{kk} that have cluster class \code{<5} samples}
- }
- @author Arshi Arora
+\item{lr} {log rank statistic}
+\item{spwss} {standardized pooled within sum of squares}
+\item{bad.sol} {number of solutions for each \code{kk} that have cluster class \code{<5} samples}
+}
+@author Arshi Arora
 }
 \description{
 Compute fit statistics after cross validation via \code{cv.survclust}
 }
 \details{
-\code{getStats} calculates Logrank statistic and standardized pooled within sum of squares (SPWSS) across 
+\code{getStats} calculates Logrank statistic and standardized pooled within sum of squares (SPWSS) across
 cross-validated labels. Visualize it via \code{plotStats}
 }

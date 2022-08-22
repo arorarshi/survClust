@@ -1,0 +1,21 @@
+#' Simulated dataset with 3-class solution
+#'
+#' A list of length 1 with a matrix simulated with 150 samples x 150 features with a 3-class structure
+#' such that 15 features are distinct and associated with survival, other 15 
+#' features are just distinct and not associated with survival and remaining 120
+#' are noise. See how this dataset was generated in the vignette
+#'
+#' @docType data
+#'
+#' @usage data(simdat)
+#'
+#' @format An object of class \code{"list"}
+#'
+#' @keywords datasets
+#'
+#' @examples
+#' data(simdat)
+#' class(simdat)
+#' dim(simdat[[1]])
+#' simdat[[1]][1:5,1:5]
+"simdat"

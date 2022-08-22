@@ -14,15 +14,15 @@ plotStats(out.getStats, labels = NULL, ...)
 \item{...}{{additional arguments as passed to \code{boxplot} function}}
 }
 \value{
-a plot with three boxplots summarizing logrank, standardized pooled within sum of squares (SPWSS) 
+a plot with three boxplots summarizing logrank, standardized pooled within sum of squares (SPWSS)
 and if any class label has less than 5 samples
 }
 \description{
 Plot the output from \code{getStats}
 }
 \details{
-plots boxplots summarizing output of \code{cv.survclust} calculated via \code{getStats}. 
-Use this to pick optimal \code{k}. Optimal \code{k} maximized logrank and minimizes SPWSS similar to the elbow 
+plots boxplots summarizing output of \code{cv.survclust} calculated via \code{getStats}.
+Use this to pick optimal \code{k}. Optimal \code{k} maximized logrank and minimizes SPWSS similar to the elbow
 method. Use \code{consensus_summary} to pick the best \code{k} and arrive at unique consolidated class labels
 }
 \author{
