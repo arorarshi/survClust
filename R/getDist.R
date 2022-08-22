@@ -26,6 +26,8 @@
 #'  And the whole matrix weighed according to the weights computed on the training dataset \code{all}.  }
 #'  }
 #'  
+#' @examples 
+#' 
 #' @author Arshi Arora
 #' 
 #' @importFrom MultiAssayExperiment MultiAssayExperiment

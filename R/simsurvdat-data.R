@@ -1,6 +1,7 @@
-#' Simulated dataset with 3-class solution
+#' Simulated survival dataset with accompanying \code{simdat}
 #'
-#' A list of length 1 with a matrix simulated with 150 samples x 150 features with a 3-class structure
+#' A matrix with simulate time-event data with 150 samples x 2 columns with a 
+#' 3-class structure with median survival of 4.5, 3.25 and 2 yrs respectively.  
 #' such that 15 features are distinct and associated with survival, other 15 
 #' features are just distinct and not associated with survival and remaining 120
 #' are noise. See how this dataset was generated in the vignette
