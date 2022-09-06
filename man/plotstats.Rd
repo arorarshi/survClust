@@ -25,6 +25,12 @@ plots boxplots summarizing output of \code{cv.survclust} calculated via \code{ge
 Use this to pick optimal \code{k}. Optimal \code{k} maximized logrank and minimizes SPWSS similar to the elbow
 method. Use \code{consensus_summary} to pick the best \code{k} and arrive at unique consolidated class labels
 }
+\examples{
+library(survClust)
+ss_stats <- getStats(uvm_survClust_cv.fit, kk=7, cvr=10)
+plotStats(ss_stats, 2:7)
+
+}
 \author{
 Arshi Arora
 }

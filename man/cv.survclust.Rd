@@ -33,6 +33,11 @@ OR this information can be provided as a part of \code{colData} \code{MultiAssay
 \code{cv.survclust} performs \code{k} fold cross-validation, runs \code{survClust} on each training and
 hold out test fold and return cross-validated supervised cluster labels.
 }
+\examples{
+library(survClust)
+cv.fit <- cv.survclust(datasets = simdat, survdat = simsurvdat, k = 3, fold=3 )
+
+}
 \author{
 Arshi Arora
 }

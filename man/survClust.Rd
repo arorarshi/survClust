@@ -26,7 +26,14 @@ survClust(combine.dist, survdat, k, cmd.k = NULL)
 \code{survClust} function performs supervised clustering on a \code{combineDist} output for a particular \code{k}.
 It uses all \code{n-1} dimensions for clustering.
 
-Description of your package
+survClust is an outcome weighted integrative clustering algorithm used to classify multi-omic samples on their available time to event information.
+}
+\examples{
+library(survClust)
+dd <- getDist(datasets = simdat, survdat = simsurvdat)
+cc <- combineDist(dd)
+survclust_fit <- survClust(combine.dist = cc, survdat = simsurvdat, k = 3)
+
 }
 \author{
 Arshi Arora

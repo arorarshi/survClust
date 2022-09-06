@@ -20,7 +20,6 @@ A list of the following
 \item{spwss} {standardized pooled within sum of squares}
 \item{bad.sol} {number of solutions for each \code{kk} that have cluster class \code{<5} samples}
 }
-@author Arshi Arora
 }
 \description{
 Compute fit statistics after cross validation via \code{cv.survclust}
@@ -28,4 +27,12 @@ Compute fit statistics after cross validation via \code{cv.survclust}
 \details{
 \code{getStats} calculates Logrank statistic and standardized pooled within sum of squares (SPWSS) across
 cross-validated labels. Visualize it via \code{plotStats}
+}
+\examples{
+library(survClust)
+ss_stats <- getStats(uvm_survClust_cv.fit, kk=7, cvr=10)
+
+}
+\author{
+Arshi Arora
 }

@@ -27,6 +27,8 @@
 #'  }
 #'  
 #' @examples 
+#' library(survClust)
+#' dd <- getDist(simdat, simsurvdat)
 #' 
 #' @author Arshi Arora
 #' 
@@ -84,10 +86,3 @@ getDist<-function(datasets,survdat=NULL,cv=FALSE,train.snames=NULL,type=NULL){
     
     
 }
-
-
-
-
-
-
-

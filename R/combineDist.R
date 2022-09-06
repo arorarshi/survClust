@@ -17,12 +17,18 @@
 #' where \code{N} is the union of all samples across \code{m} data types/ or samples with complete pairwise information. 
 #' Final matrix should not have any NAs}
 #' }
+#' 
+#' @examples 
+#' library(survClust)
+#' dd <- getDist(simdat, simsurvdat)
+#' cc <-  combineDist(dd)
+#' 
+#' 
 #' @author Arshi Arora
 #' 
 #'
 #' @export
-#' 
-combineDist<-function(dist.dat){
+combineDist <- function(dist.dat){
     
     arr <- array(unlist(dist.dat), dim = c(nrow(dist.dat[[1]]),ncol(dist.dat[[1]]),length(dist.dat)))
     #calculate mean distance after removing NA
@@ -40,7 +46,7 @@ combineDist<-function(dist.dat){
     while(sum(is.na(combMatFull))!=0){
         if (iter==1){del.idx <- idx[iter]}
         if (iter!=1){del.idx <- c(del.idx, idx[iter])}
-        combMatFull = combMat[-del.idx, -del.idx]
+        combMatFull <- combMat[-del.idx, -del.idx]
         iter <- iter + 1
     }
     

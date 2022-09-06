@@ -38,6 +38,11 @@ Used as an input to, \code{combineDist()}.
 If the list only has a binary matrix data type. Set \code{type="mut"}. All data types are standardized internally.
 All data types are not expected to have common samples. Non-overlapping samples within data types are replaced with NA, and returned weighted matrix consists of union of all the samples.
 }
+\examples{
+library(survClust)
+dd <- getDist(simdat, simsurvdat)
+
+}
 \author{
 Arshi Arora
 }

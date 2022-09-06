@@ -25,6 +25,13 @@ All data types are now collapsed into one \code{NxN} matrix.
 if \code{datasets} list had non-overlapping samples,
 then \code{combineDist} retains only those samples that have full information after accounting for all data types.
 }
+\examples{
+library(survClust)
+dd <- getDist(simdat, simsurvdat)
+cc <-  combineDist(dd)
+
+
+}
 \author{
 Arshi Arora
 }

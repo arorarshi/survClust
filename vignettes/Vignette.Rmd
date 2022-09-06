@@ -14,8 +14,8 @@ vignette: >
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
+    collapse = TRUE,
+    comment = "#>"
 )
 ```
 
@@ -36,7 +36,7 @@ Below is the workflow of proposed survClust method:
 Note: 
 
 (1) The input datatypes needs to be carefully pre-processed. See the data pre-processing section. 
-(2) `cv.survclust` is a wrapper function that cross-validates and outputs cluster assignments. If you run without cross validation and just the commands on its own (`getDist`, `combineDist` and `survClust`), you are over-fitting!
+(2) `cv.survclust` is a wrapper function that cross-validates and outputs cluster assignments. If you run without cross validation and just the commands on its own (`getDist`, `combineDist` and `survClust`), you are **over-fitting!**
 
 In this document, we use the TCGA UVM data set and a simulation example to demonstrate how to use survClust to perform integrative supervised clustering. 
 
@@ -49,7 +49,7 @@ All TCGA data has been downloaded from the TCGA pancancer paper[The Cancer Genom
 
 The data and pre-processing steps are largely followed from iCluster manual by - iCluster (Mo Q, Shen R (2022). iClusterPlus: Integrative clustering of multi-type genomic data. R package version 1.32.0.). The pre-processing steps that we used in the manuscript are described here. 
 
-* Copy Number data was segmented using CBS$^4$ and reduced to non-redundant regions of alterations using the `CNregion` function in `iClusterPlus` with default epsilon of `0.001`, keeping in mind that the total numbers of features don’t exceed 10,000. See below and preprocessed data is provided with the package - `uvm_dat.Rds` Commented code goes over how we actually processed from the raw data. 
+* Copy Number data was segmented using CBS$^4$ and reduced to non-redundant regions of alterations using the `CNregion` function in `iClusterPlus` with default epsilon of `0.001`, keeping in mind that the total numbers of features don’t exceed 10,000. See below and preprocessed data is provided with the package - `uvm_dat.Rds` See Appendix for how the data attached with the package was processed. 
 
 * For DNA methylation, mRNA expression and miRNA expression, if a certain feature had more than 20% missing data, that feature was removed and remaining were used for analysis. 
 
@@ -57,100 +57,153 @@ The data and pre-processing steps are largely followed from iCluster manual by -
 
 * Similarly, methylation probes with mean beta values < 0.1 and > 0.9 were discarded. 
 
-* For mutation data, we first filtered variants that were classified as `SILENT`. Secondly, genes harboring mutants in less than 1% of the samples were also removed. For our case study of UVM, we just removed singleton mutations. See below and preprocessed data is provided with the package - `uvm_dat.Rds`
+* For mutation data, we first filtered variants that were classified as `SILENT`. Secondly, genes harboring mutants in less than 1% of the samples were also removed. For our case study of UVM, we just removed singleton mutations. See below and preprocessed data is provided with the package - `uvm_dat.Rdata`
 
 ```{r}
+library(survClust)
+library(survival)
 
-# DO NOT RUN. Use provided dataset
-# Process mutation maf data
-# maf = data.table::fread("mc3.v0.2.8.PUBLIC.maf.gz", header = T)
-# maf_filter = maf %>% filter(FILTER == "PASS",
-#                            Variant_Classification != "Silent")
+#load TCGA UVM mutation and CN data 
+#load("../data/uvm_dat.Rdata")
 
-# few lines of code in tidyR to convert maf to a binary file
-# maf_binary <- maf_filter %>%
-#   select(Tumor_Sample_Barcode, Hugo_Symbol) %>%
-#   distinct() %>%
-#   pivot_wider(names_from = "Hugo_Symbol",
-#               values_from = 'Hugo_Symbol',
-#               values_fill = 0, values_fn = function(x) 1)
-# maf_binary$tcga_short = substr(maf_binary$Tumor_Sample_Barcode, 1, 12)
+#mutation data
+uvm_dat[[1]][1:5,1:5]
 
-# Process clinical file
-# tcga_clin = readxl::read_excel("TCGA-CDR-SupplementalTableS1.xlsx", sheet=1, col_names = TRUE)
-#
-# uvm_clin <- tcga_clin %>% filter(type == "UVM")
-# uvm_maf_binary <- maf_binary %>%
-#   filter(tcga_short %in% uvm_clin$bcr_patient_barcode) %>%
-#   select(-Tumor_Sample_Barcode)
-# rnames = uvm_maf_binary$tcga_short
-#
-# uvm_maf = uvm_maf_binary %>% select(-tcga_short) %>%
-#   apply(., 2, as.numeric)
+#copy number data
+uvm_dat[[2]][1:5,1:5]
 
-# Remove singletons
-# gene_sum = apply(uvm_maf,2,sum)
-# idx = which(gene_sum > 1)
-#
-# uvm_maf = uvm_maf[,idx]
-# rownames(uvm_maf) = rnames
-#
-
-# uvm_survdat = uvm_clin %>% select(OS.time, OS) %>%
-#   apply(., 2, as.numeric)
-#
-# rownames(uvm_survdat) = uvm_clin$bcr_patient_barcode
-
-# process CN
-# library(cluster)#pam function for derive medoid
-# library(GenomicRanges) #interval overlap to remove CNV
-# library(iClusterPlus)
-#
-# seg = read.delim(file="broad.mit.edu_PANCAN_Genome_Wide_SNP_6_whitelisted.seg", header=T,sep="\t", as.is=T)
-#
-# pp = substr(seg$Sample,13,16)
-# seg.idx = c(grep("-01A",pp),grep("-01B",pp),grep("-03A",pp))
-# only take tumors
-# seg.idx = c(grep("-01A",pp),grep("-01B",pp))
-# seg= seg[seg.idx,]
-
-# seg$Sample= substr(seg[,1],1,12)
-#
-# uvm_seg = seg[seg$Sample %in% uvm_clin$bcr_patient_barcode,]
-
-# colnames(uvm_seg)=c("Sample", "Chromosome", "Start", "End", "Num_Probes", "Segment_Mean")
-# pass epsillon as 0.001 default or user
-# reducedMseg=CNregions(ss_seg,epsilon=0.001,adaptive=F,rmCNV=F, cnv=NULL, frac.overlap=0.5, rmSmallseg=T, nProbes=75)
-
-#uvm_dat <- list(uvm_mut = uvm_maf, uvm_cn = uvm_seg)
-
-load("../data/uvm_dat.Rdata")
-
-names(uvm_dat)
-
-uvm_dat$uvm_mut[1:5,1:5]
-
-uvm_dat$uvm_cn[1:5,1:5]
-
-hist(uvm_dat$uvm_cn)
-
-#uvm_survdat = load("../data/uvm_survdat.Rdata")
-#head(uvm_survdat)
+#load TCGA UVM clinical data
+#load("../data/uvm_survdat.Rdata")
+head(uvm_survdat)
 
 ```
 
-
 ## Supervised integrative cluster analysis 
 
-To run supervised integrative clustering analysis - we will be calling `cv.survclust`. 
+To run supervised integrative clustering analysis - we will be calling `cv.survclust`. cross-validation takes time and we will be using the `doParallel` package and splitting cross-validation across `k` clusters. 
+
+We will perform **3-fold** cross-validation over **10** rounds as follows: 
+
+```{r, echo=TRUE, eval=FALSE}
+
+#let's choose k = 2:7, split over 6 cores
+
+library(doParallel)
+registerDoParallel(cores=6)
+
+#function to do cross validation 
+cvrounds<-function(x,survdat,kk){
+    this.fold<-3
+    fit<-list()
+    for (i in 1:10){
+        fit[[i]] <- cv.survclust(x,survdat,kk,this.fold)
+        print(paste0("finished ", i, " rounds for k= ", kk))
+    }
+    return(fit)
+}
+
+```
+
+We will be using this code for both UVM data and then use this as a simulation example as discussed in the manuscript{^1}. 
+
+*Note* that 10 rounds of cross-validation is not enough and we recommend at least 50 rounds of cross-validation to get some stability in results.
 
 ### UVM data 
 
+```{r, echo=TRUE, eval=FALSE}
+ptm <- Sys.time()
+cv.fit<-foreach(kk=2:7) %dopar% cvrounds(uvm_dat, uvm_survdat,kk)
+ptm2 <- Sys.time()
+
+#> ptm
+#[1] "2022-09-05 20:54:21 EDT"
+#> ptm2
+#[1] "2022-09-05 21:01:12 EDT"
+
+
+```
+
+Supervised integrative clustering was performed on TCGA UVM consisting of about  80 samples and 87 genes in the mutation data and CN data summarized over 749 segments. 
+
+```{r}
+lapply(uvm_dat, function(x) dim(x))
+```
+
+The above process took about ~7 minutes on a *macOS Catalina* with *2.6 GHz Dual-Core Intel Core i5* running on *8Gb RAM*. If you wish to skip the runtime, output is available as `uvm_survClust_cv.fit.Rdata`. Due to 10 rounds of cross validation, the results from your run might differ from what is provided. 
+
+The output is a list object consisting of 6 sub-lists for $k = 2:6$, with 10 `cv.survclust` output (for each round of cross-validation), each consisting of `cv.labels`, `cv.logrank`, `cv.spwss` for 3 folds. 
+
+
+```{r}
+
+#load("../data/uvm_survClust_cv.fit.Rdata")
+
+#for k=2, 1st round of cross validation
+names(uvm_survClust_cv.fit[[1]][[1]])
+
+```
+
+Now, let's use `survClust::getStats` to summarize and `survClust::plotStats` to plot some of the supervised integrative clustering metrics. 
+
+```{r, fig.width=8, fig.height=8}
+
+ss_stats <- getStats(uvm_survClust_cv.fit, kk=7, cvr=10)
+plotStats(ss_stats, 2:7)
+```
+
+In the above plot, the topleft plot is summarizing logrank over 10 rounds of cross-validated class labels across 3-fold cross-validation. Here, we see how logrank peaks at `k=4`. 
+
+the topright plot is summarizing `SPWSS` or `Standardized Pooled Within Sum of Squares`. Briefly, pooled within-cluster sum of squares were standardized by the total sum of squares similar to methodology used in the gap statistic [5] to select the appropriate number of clusters.
+
+Here `SPWSS` decreases monotonically as the number of clusters `k` increases. The optimal number of clusters is where `SPWSS` is minimized and creates an “elbow” or a point of inflection, where addition of more clusters does not improve cluster separation. For examaple, here the plot elbows at `k=4`
+
+Another property of `SPWSS` is that it can be used to compare among different datasets as it lies between 0 and 1 after standardization. This is useful for comparing survClust runs between individual data types and when we integrate them.
+
+The last plot, on the bottomleft, shows for each `k` how many `k` class labels have `<=5` samples in 10 rounds of cross validation. In our case here, for `k >5` the number of classes with `<=5` samples increases, so we can choose `k=4`. 
+
+```{r, message=FALSE}
+
+k4 <- cv_voting(uvm_survClust_cv.fit, getDist(uvm_dat, uvm_survdat), pick_k=4)
+table(k4)
+
+plot(survfit(Surv(uvm_survdat[,1], uvm_survdat[,2])~k4), mark.time=TRUE, col=1:4)
+```
+
+Let's see some of the differentiating features in mutation data. 
+
+```{r}
+
+mut_k4_test <- apply(uvm_dat[[1]],2,function(x) fisher.test(x,k4)$p.value)
+head(sort(p.adjust(mut_k4_test)))
+```
+
+All the figures as shown in the manuscript are plotted using `panelmap`. It is available on GitHub over here - https://github.com/arorarshi/panelmap
+We will use it to see the distribution of these mutations across teh 4 clusters. 
+
+```{r}
+
+sort_idx <- order(k4)
+
+panelmap::makepanel(k4[sort_idx], 
+                    gr.name = "k4", gr.col = c("red","blue", "green", "orange"),
+                    uvm_dat[[1]][sort_idx,c("SF3B1","GNAQ", "GNA11", "BAP1", "EIF1AX")], 
+                    mat.col = list(GNAQ = c("white", "black"), GNA11 = c("white", "black"), SF3B1 = c("white", "black"), BAP1 = c("white", "black"), EIF1AX = c("white", "black")), mat.type = c(1,1,1,1,1))
+
+
+```
+
+And for Copy Number data as follows - 
+
 ### simulation example
 
+Simulation example is presented in the survClust manuscrpt[1]. 
+
+```{r}
+
+
+```
 ### Bonus - UVM mutation data alone 
 
-## Picking k
 
 ## Results 
 
@@ -163,24 +216,179 @@ plot(10:1)
 
 You can enable figure captions by `fig_caption: yes` in YAML:
 
-    output:
-      rmarkdown::html_vignette:
-        fig_caption: yes
+output:
+rmarkdown::html_vignette:
+fig_caption: yes
 
 Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
 
 ## Appendix
 
-### Create simulation dataset 
-
 ### Process TCGA dataset 
 
-You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
+```{r, eval=FALSE, echo=TRUE}
 
-```{r, echo=FALSE, results='asis'}
-knitr::kable(head(mtcars, 10))
+# DO NOT RUN. Use provided dataset
+#Process mutation maf data
+#Download data from - https://gdc.cancer.gov/about-data/publications/pancanatlas
+
+maf <- data.table::fread("mc3.v0.2.8.PUBLIC.maf.gz", header = TRUE)
+maf_filter <- maf %>% filter(FILTER == "PASS",
+                            Variant_Classification != "Silent")
+
+# few lines of code in tidyR to convert maf to a binary file
+maf_binary <- maf_filter %>%
+    select(Tumor_Sample_Barcode, Hugo_Symbol) %>%
+    distinct() %>%
+    pivot_wider(names_from = "Hugo_Symbol",
+                values_from = 'Hugo_Symbol',
+                values_fill = 0, values_fn = function(x) 1)
+
+maf_binary$tcga_short <- substr(maf_binary$Tumor_Sample_Barcode, 1, 12)
+
+# Process clinical file
+tcga_clin <- readxl::read_excel("TCGA-CDR-SupplementalTableS1.xlsx", sheet=1, col_names = TRUE)
+
+uvm_clin <- tcga_clin %>% filter(type == "UVM")
+uvm_maf_binary <- maf_binary %>%
+    filter(tcga_short %in% uvm_clin$bcr_patient_barcode) %>%
+    select(-Tumor_Sample_Barcode)
+rnames <- uvm_maf_binary$tcga_short
+
+uvm_maf <- uvm_maf_binary %>% select(-tcga_short) %>%
+    apply(., 2, as.numeric)
+
+# Remove singletons
+gene_sum <- apply(uvm_maf,2,sum)
+idx <- which(gene_sum > 1)
+
+uvm_maf <- uvm_maf[,idx]
+rownames(uvm_maf) <- rnames
+
+
+uvm_survdat <- uvm_clin %>% select(OS.time, OS) %>%
+    apply(., 2, as.numeric)
+
+rownames(uvm_survdat) <- uvm_clin$bcr_patient_barcode
+
+# process CN
+library(cluster)#pam function for derive medoid
+library(GenomicRanges) #interval overlap to remove CNV
+library(iClusterPlus)
+
+seg <- read.delim(file="broad.mit.edu_PANCAN_Genome_Wide_SNP_6_whitelisted.seg", header=TRUE,sep="\t", as.is=TRUE)
+
+pp <- substr(seg$Sample,13,16)
+seg.idx <- c(grep("-01A",pp),grep("-01B",pp),grep("-03A",pp))
+
+#only take tumors
+seg.idx <- c(grep("-01A",pp),grep("-01B",pp))
+seg <- seg[seg.idx,]
+
+seg$Sample <- substr(seg[,1],1,12)
+
+uvm_seg <- seg[seg$Sample %in% uvm_clin$bcr_patient_barcode,]
+
+colnames(uvm_seg) <- c("Sample", "Chromosome", "Start", "End", "Num_Probes", "Segment_Mean")
+
+# pass epsillon as 0.001 default or user
+reducedMseg <- CNregions(ss_seg,epsilon=0.001,adaptive=FALSE,rmCNV=FALSE, cnv=NULL, frac.overlap=0.5, rmSmallseg=TRUE, nProbes=75)
+
+uvm_dat <- list(uvm_mut = uvm_maf, uvm_cn = uvm_seg)
+
 ```
 
+
+### Create simulation dataset 
+
+```{r, echo=TRUE, eval=FALSE}
+set.seed(112)
+n1 <- 50 #class1
+n2 <- 50 #class2
+n3 <- 50 #class3
+n <- n1+n2+n3
+p <- 15 #survival related features (10%)
+q <- 120 #noise
+
+#class1 ~ N(1.5,1), class2 ~ N(0,1), class3 ~ N(-1.5,1)
+
+sample_names <- paste0("S",1:n)
+feature_names <- paste0("features", 1:n)
+
+#final matrix
+x_big <- NULL
+
+################
+# sample 15 informant features
+
+#simulating class1
+x1a <- matrix(rnorm(n1*p, 1.5, 1), ncol=p)
+
+#simulating class2
+x2a <- matrix(rnorm(n2*p), ncol=p)
+
+
+#simulating class3
+x3a <- matrix(rnorm(n3*p, -1.5,1), ncol=p)
+
+#this concluded that part shaded in red of the matrix - 
+#corresponding to related to survival and molecularly distinct
+xa <- rbind(x1a,x2a,x3a)
+
+################
+# sample 15 other informant features, but scramble them.
+
+permute.idx<-sample(1:length(sample_names),length(sample_names))
+
+x1b <- matrix(rnorm(n1*p, 1.5, 1), ncol=p)
+x2b <- matrix(rnorm(n2*p), ncol=p)
+x3b <- matrix(rnorm(n3*p, -1.5,1), ncol=p)
+
+#this concluded that part shaded in blue of the matrix - 
+#containing the molecular distinct features but not related to survival 
+xb <- rbind(x1b,x2b,x3b)
+
+
+#this concludes the area shaded area in grey which corresponds to noise
+xc <- matrix(rnorm(n*q), ncol=q)
+
+x_big <- cbind(xa,xb[permute.idx,], xc)
+
+rownames(x_big) <- sample_names
+colnames(x_big) <- feature_names
+simdat <- list()
+simdat[[1]] <- x_big
+
+#the three classes will have a median survival of 4.5, 3.25 and 2 yrs respectively 
+set.seed(112)
+med_surv_class1 <- log(2)/4.5
+med_surv_class2 <- log(2)/3.25
+med_surv_class3 <- log(2)/2
+
+surv_dist_class1 <- rexp(n1,rate=med_surv_class1)
+censor_events_class1 <- runif(n1,0,10)
+
+surv_dist_class2 <- rexp(n2,rate=med_surv_class2)
+censor_events_class2 <- runif(n2,0,10)
+
+surv_dist_class3 <- rexp(n3,rate=med_surv_class3)
+censor_events_class3 <- runif(n3,0,10)
+
+surv_time_class1 <- pmin(surv_dist_class1,censor_events_class1)
+surv_time_class2 <- pmin(surv_dist_class2,censor_events_class2)
+surv_time_class3 <- pmin(surv_dist_class3,censor_events_class3)
+
+event <- c((surv_time_class1==surv_dist_class1),
+          (surv_time_class2==surv_dist_class2),
+          (surv_time_class3==surv_dist_class3))
+
+time <- c(surv_time_class1, surv_time_class2, surv_time_class3)
+
+survdat <- cbind(time, event)
+
+simsurvdat <- cbind(time, event)
+
+```
 
 ## Refrences
 
@@ -188,3 +396,10 @@ knitr::kable(head(mtcars, 10))
 2. tcga pancan 
 3. icluster 
 4. cbs 
+5. Tibshirani R, Walther G, Hastie T. Estimating the number of clusters in a data set via the gap statistic. J Roy Stat Soc B. 2001;63:411–23. https://doi.org/10.1111/1467-9868.00293.
+
+## SessionInfo
+
+```{r}
+sessionInfo()
+```

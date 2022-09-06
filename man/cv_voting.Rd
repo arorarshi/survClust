@@ -34,3 +34,12 @@ final.labels consolidated class labels over rounds of cross-validation
 For a \code{survClust} fit, return consolidated labels across rounds of cross validation for a specific \code{k}.
 Note that cv.fit already has consolidated class labels across folds
 }
+\examples{
+library(survClust)
+k4 <- cv_voting(uvm_survClust_cv.fit, getDist(uvm_dat, uvm_survdat), pick_k = 4)
+table(k4)
+
+}
+\author{
+Arshi Arora
+}

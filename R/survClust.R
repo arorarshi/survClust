@@ -17,7 +17,16 @@
 #'  \code{fit.lr}, computed logrank statistic between \code{k} clusters}
 #' }
 #' 
+#' @examples
+#' library(survClust)
+#' dd <- getDist(datasets = simdat, survdat = simsurvdat)
+#' cc <- combineDist(dd)
+#' survclust_fit <- survClust(combine.dist = cc, survdat = simsurvdat, k = 3)
+#' 
 #' @author Arshi Arora
+#' 
+#' @importFrom pdist pdist
+#' @importFrom survival survdiff survfit
 #' @export
 survClust<-function(combine.dist,survdat,k, cmd.k=NULL){
     if(is.null(rownames(survdat)))
@@ -47,7 +56,7 @@ survClust<-function(combine.dist,survdat,k, cmd.k=NULL){
     if(is.null(cmd.k)){cmd.k <- nrow(combine.dist)-1 }
     if(!(is.null(cmd.k))){cmd.k <- as.numeric(cmd.k) }
     
-    cmd.combine.dist<-cmdscale(combine.dist,k=cmd.k, add=TRUE)$points
+    cmd.combine.dist <- cmdscale(combine.dist,k=cmd.k, add=TRUE)$points
     
     my.k <- as.numeric(k)
     survobj <- Surv(clin[,1], clin[,2])
@@ -56,7 +65,7 @@ survClust<-function(combine.dist,survdat,k, cmd.k=NULL){
     fit <- kmeans(cmd.combine.dist,my.k,nstart=100)
     
     #caluclate logrank
-    fit.lr <- survdiff(Surv(clin[,1], clin[,2]) ~ fit$cluster)$chisq
+    fit.lr <- survival::survdiff(Surv(clin[,1], clin[,2]) ~ fit$cluster)$chisq
     fit$fit.lr <- fit.lr
     
     #return fit and its logrank

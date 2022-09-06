@@ -16,11 +16,11 @@
             summary(survival::coxph(survobj ~ y))$coefficients[1]
         }, warning = function(w) {
             if(grepl("infinite", w$message))
-            {message(paste0(w$message, " setting weights=0"));return(1e-6)}
+            {message(w$message, " setting weights=0");return(1e-6)}
             
         }, error = function(e) {
             if(grepl("NA/NaN/Inf", e$message))
-            {message(paste0(e$message, " .Setting weights=0")); return(0)}
+            {message(e$message, " .Setting weights=0"); return(0)}
             
         }) )
         logHR <- abs(logHR)
@@ -42,11 +42,11 @@
             summary(survival::coxph(survobj ~ y))$coefficients[1]
         }, warning = function(w) {
             if(grepl("infinite", w$message))
-            {message(paste0(w$message, " setting weights=0"));return(0)}
+            {message(w$message, " setting weights=0");return(0)}
             
         }, error = function(e) {
             if(grepl("NA/NaN/Inf", e$message))
-            {message(paste0(e$message, " .Setting weights=0")); return(0)}
+            {message(e$message, " .Setting weights=0"); return(0)}
             
         }) )
         logHR <- abs(logHR)
@@ -110,8 +110,8 @@
         idx <- which(names(centroid.cluster) == kpattern)
         #change current label to this
         if(length(idx)!=0){
-            change.label = centroid.cluster[idx]
-            idx2 = which(olabel == i)
+            change.label <- centroid.cluster[idx]
+            idx2 <- which(olabel == i)
             if(length(idx2)!=0){relabel[idx2] = change.label}
         }
     }
@@ -136,7 +136,7 @@
             centroids[i, ] <- apply(mat.ul, 2, mean)
         }
     }
-    rownames(centroids) <- paste0("f", fold, "_k", ul)
+    rownames(centroids) <- cat("f", fold, "_k", ul)
     return(centroids)
 }
 
