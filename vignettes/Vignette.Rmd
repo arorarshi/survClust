@@ -6,6 +6,7 @@ date: "`r Sys.Date()`"
 output: 
   BiocStyle::html_document:
     toc: true
+    fig_caption: yes
 vignette: >
   %\VignetteIndexEntry{An introduction to survClust package}
   %\VignetteEngine{knitr::rmarkdown}
@@ -23,11 +24,11 @@ knitr::opts_chunk$set(
 
 ### The tldr version 
 
-**survClust**$^1$ is an outcome weighted integrative supervised clustering algorithm, designed to classify patients according to their molecular as well as time-event or end point of interest. Until now, sub-typing in cancer biology has relied heavily upon clustering/mining of molecular data alone. We present classification of samples on molecular data supervised by time-event data like Overall Survival (OS), Progression Free Survival etc. 
+**survClust**$^1$ is an outcome weighted integrative supervised clustering algorithm, designed to classify patients according to their molecular as well as time-event or end point of interest. Until now, sub-typing in cancer biology has relied heavily upon clustering/mining of molecular data alone. We present classification of samples on molecular data supervised by time-event data like Overall Survival (OS), Progression Free Survival (PFS) etc. 
 
 Below is the workflow of proposed survClust method:
 
-`getDist` - Compute a weighted distance matrix based on outcome across given `m` data types. Standardization and accounting for non-overlapping samples is also accomplished in this step.
+`getDist` - Compute a weighted distance matrix based on outcome across given `m` data types. Standardization across data types to facilitate the integration proces and accounting for non-overlapping samples is also accomplished in this step.
 
 `combineDist` - Integrate `m` data types by averaging over `m` weighted distance matrices.
 
@@ -36,20 +37,18 @@ Below is the workflow of proposed survClust method:
 Note: 
 
 (1) The input datatypes needs to be carefully pre-processed. See the data pre-processing section. 
+
 (2) `cv.survclust` is a wrapper function that cross-validates and outputs cluster assignments. If you run without cross validation and just the commands on its own (`getDist`, `combineDist` and `survClust`), you are **over-fitting!**
 
 In this document, we use the TCGA UVM data set and a simulation example to demonstrate how to use survClust to perform integrative supervised clustering. 
 
-All TCGA data has been downloaded from the TCGA pancancer paper[The Cancer Genome Atlas Research Network., Weinstein, J., Collisson, E. et al. The Cancer Genome Atlas Pan-Cancer analysis project. Nat Genet 45, 1113–1120 (2013).](https://doi.org/10.1038/ng.2764)
-
-### Bit more 
-
+All TCGA data has been downloaded from the TCGA pan-cancer paper$^2$
 
 ## Data and Pre-processing 
 
-The data and pre-processing steps are largely followed from iCluster manual by - iCluster (Mo Q, Shen R (2022). iClusterPlus: Integrative clustering of multi-type genomic data. R package version 1.32.0.). The pre-processing steps that we used in the manuscript are described here. 
+The data and pre-processing steps are largely followed from iCluster$^3$ manual by - iCluster (Mo Q, Shen R (2022). iClusterPlus: Integrative clustering of multi-type genomic data. R package version 1.32.0.). The pre-processing steps that we used in the manuscript are described here. 
 
-* Copy Number data was segmented using CBS$^4$ and reduced to non-redundant regions of alterations using the `CNregion` function in `iClusterPlus` with default epsilon of `0.001`, keeping in mind that the total numbers of features don’t exceed 10,000. See below and preprocessed data is provided with the package - `uvm_dat.Rds` See Appendix for how the data attached with the package was processed. 
+* Copy Number data was segmented using CBS$^4$ and reduced to non-redundant regions of alterations using the `CNregion` function in `iClusterPlus` with default epsilon of `0.001`, keeping in mind that the total numbers of features don’t exceed 10,000. See below and pre-processed data is provided with the package - `uvm_dat` See [Appendix](#appendix) for how the data attached with the package was processed. 
 
 * For DNA methylation, mRNA expression and miRNA expression, if a certain feature had more than 20% missing data, that feature was removed and remaining were used for analysis. 
 
@@ -57,14 +56,12 @@ The data and pre-processing steps are largely followed from iCluster manual by -
 
 * Similarly, methylation probes with mean beta values < 0.1 and > 0.9 were discarded. 
 
-* For mutation data, we first filtered variants that were classified as `SILENT`. Secondly, genes harboring mutants in less than 1% of the samples were also removed. For our case study of UVM, we just removed singleton mutations. See below and preprocessed data is provided with the package - `uvm_dat.Rdata`
+* For mutation data, we first filtered variants that were classified as `SILENT`. Secondly, genes harboring mutants in less than 1% of the samples were also removed. For our case study of UVM, we just removed singleton mutations. See below and pre-processed data is provided with the package - `uvm_dat`
 
 ```{r}
 library(survClust)
 library(survival)
-
-#load TCGA UVM mutation and CN data 
-#load("../data/uvm_dat.Rdata")
+library(doParallel)
 
 #mutation data
 uvm_dat[[1]][1:5,1:5]
@@ -72,19 +69,18 @@ uvm_dat[[1]][1:5,1:5]
 #copy number data
 uvm_dat[[2]][1:5,1:5]
 
-#load TCGA UVM clinical data
-#load("../data/uvm_survdat.Rdata")
+#TCGA UVM clinical data
 head(uvm_survdat)
 
 ```
 
 ## Supervised integrative cluster analysis 
 
-To run supervised integrative clustering analysis - we will be calling `cv.survclust`. cross-validation takes time and we will be using the `doParallel` package and splitting cross-validation across `k` clusters. 
+To run supervised integrative clustering analysis - we will be calling `cv.survclust`. Cross-validation takes time and we will be using the `doParallel` package and splitting cross-validation across `k` clusters. 
 
 We will perform **3-fold** cross-validation over **10** rounds as follows: 
 
-```{r, echo=TRUE, eval=FALSE}
+```{r, echo=TRUE, eval=TRUE}
 
 #let's choose k = 2:7, split over 6 cores
 
@@ -104,7 +100,7 @@ cvrounds<-function(x,survdat,kk){
 
 ```
 
-We will be using this code for both UVM data and then use this as a simulation example as discussed in the manuscript{^1}. 
+We will be using this code for both UVM data and then use this as a simulation example as discussed in the manuscript$^1$. 
 
 *Note* that 10 rounds of cross-validation is not enough and we recommend at least 50 rounds of cross-validation to get some stability in results.
 
@@ -129,14 +125,12 @@ Supervised integrative clustering was performed on TCGA UVM consisting of about 
 lapply(uvm_dat, function(x) dim(x))
 ```
 
-The above process took about ~7 minutes on a *macOS Catalina* with *2.6 GHz Dual-Core Intel Core i5* running on *8Gb RAM*. If you wish to skip the runtime, output is available as `uvm_survClust_cv.fit.Rdata`. Due to 10 rounds of cross validation, the results from your run might differ from what is provided. 
+The above process took about ~7 minutes on a *macOS Catalina* with *2.6 GHz Dual-Core Intel Core i5* running on *8Gb RAM*. If you wish to skip the run-time, output is available as `uvm_survClust_cv.fit`. Due to 10 rounds of cross validation, the results from your run might differ from what is provided. 
 
-The output is a list object consisting of 6 sub-lists for $k = 2:6$, with 10 `cv.survclust` output (for each round of cross-validation), each consisting of `cv.labels`, `cv.logrank`, `cv.spwss` for 3 folds. 
+The output is a list object consisting of 6 sub-lists for $k = 2:7$, with 10 `cv.survclust` outputs (for each round of cross-validation), each consisting of `cv.labels`, `cv.logrank`, `cv.spwss` for 3 folds. 
 
 
 ```{r}
-
-#load("../data/uvm_survClust_cv.fit.Rdata")
 
 #for k=2, 1st round of cross validation
 names(uvm_survClust_cv.fit[[1]][[1]])
@@ -145,23 +139,25 @@ names(uvm_survClust_cv.fit[[1]][[1]])
 
 Now, let's use `survClust::getStats` to summarize and `survClust::plotStats` to plot some of the supervised integrative clustering metrics. 
 
-```{r, fig.width=8, fig.height=8}
+```{r, fig.width=8, fig.height=8, fig.cap= "survClust analysis of TCGA UVM mutation and Copy Number data"}
 
 ss_stats <- getStats(uvm_survClust_cv.fit, kk=7, cvr=10)
 plotStats(ss_stats, 2:7)
 ```
 
+#### Picking k cluster solution 
+
 In the above plot, the topleft plot is summarizing logrank over 10 rounds of cross-validated class labels across 3-fold cross-validation. Here, we see how logrank peaks at `k=4`. 
 
-the topright plot is summarizing `SPWSS` or `Standardized Pooled Within Sum of Squares`. Briefly, pooled within-cluster sum of squares were standardized by the total sum of squares similar to methodology used in the gap statistic [5] to select the appropriate number of clusters.
+the topright plot is summarizing `SPWSS` or `Standardized Pooled Within Sum of Squares`. Briefly, pooled within-cluster sum of squares were standardized by the total sum of squares similar to methodology used in the gap statistic$^5$ to select the appropriate number of clusters.
 
-Here `SPWSS` decreases monotonically as the number of clusters `k` increases. The optimal number of clusters is where `SPWSS` is minimized and creates an “elbow” or a point of inflection, where addition of more clusters does not improve cluster separation. For examaple, here the plot elbows at `k=4`
+Here `SPWSS` decreases monotonically as the number of clusters `k` increases. The optimal number of clusters is where `SPWSS` is minimized and creates an “elbow” or a point of inflection, where addition of more clusters does not improve cluster separation. For example, here the plot elbows at `k=4`
 
 Another property of `SPWSS` is that it can be used to compare among different datasets as it lies between 0 and 1 after standardization. This is useful for comparing survClust runs between individual data types and when we integrate them.
 
 The last plot, on the bottomleft, shows for each `k` how many `k` class labels have `<=5` samples in 10 rounds of cross validation. In our case here, for `k >5` the number of classes with `<=5` samples increases, so we can choose `k=4`. 
 
-```{r, message=FALSE}
+```{r, message=FALSE, fig.cap= "survClust KM analysis for integrated TCGA UVM Mutation and Copy Number for k=4"}
 
 k4 <- cv_voting(uvm_survClust_cv.fit, getDist(uvm_dat, uvm_survdat), pick_k=4)
 table(k4)
@@ -178,14 +174,14 @@ head(sort(p.adjust(mut_k4_test)))
 ```
 
 All the figures as shown in the manuscript are plotted using `panelmap`. It is available on GitHub over here - https://github.com/arorarshi/panelmap
-We will use it to see the distribution of these mutations across teh 4 clusters. 
+We will use it to see the distribution of these mutations across the 4 clusters. 
 
-```{r}
+```{r, fig.cap= "TCGA UVM mutation features for k=4"}
 
 sort_idx <- order(k4)
 
 panelmap::makepanel(k4[sort_idx], 
-                    gr.name = "k4", gr.col = c("red","blue", "green", "orange"),
+                    gr.name = "k4", gr.col = c("black","red", "blue", "green"),
                     uvm_dat[[1]][sort_idx,c("SF3B1","GNAQ", "GNA11", "BAP1", "EIF1AX")], 
                     mat.col = list(GNAQ = c("white", "black"), GNA11 = c("white", "black"), SF3B1 = c("white", "black"), BAP1 = c("white", "black"), EIF1AX = c("white", "black")), mat.type = c(1,1,1,1,1))
 
@@ -194,35 +190,168 @@ panelmap::makepanel(k4[sort_idx],
 
 And for Copy Number data as follows - 
 
+```{r, fig.width=5, fig.height=6, fig.cap= "TCGA UVM Copy Number k=4"}
+
+cn_imagedata <- uvm_dat[[2]]
+cn_imagedata[cn_imagedata < -1.5] <- -1.5
+cn_imagedata[cn_imagedata > 1.5] <- 1.5
+
+oo <- order(k4)
+cn_imagedata <- cn_imagedata[oo,]
+cn_imagedata <- cn_imagedata[,ncol(cn_imagedata):1]
+#image(cn_imagedata,col=gplots::bluered(50),axes=F)
+
+#image y labels - chr names
+cnames = colnames(cn_imagedata)
+cnames = unlist(lapply(strsplit(cnames, "\\."), function(x) x[1]))
+tt = table(cnames)
+nn = paste0("chr",1:22)
+
+chr.labels = rep(NA, length(cnames))
+
+index=1
+chr.labels[1] = "1"
+
+for(i in 1:(length(nn)-1)) {
+    index = index + tt[nn[i]]
+    chr.labels[index] = gsub("chr","",nn[i+1])
+}
+
+idx = which(!(is.na(chr.labels)))
+
+image(cn_imagedata,col=gplots::bluered(50),axes=FALSE)
+
+axis(2, at = 1 - (idx/length(cnames)), labels = chr.labels[idx], las=1, cex.axis=0.8)
+abline(v = c(cumsum(prop.table(table(k4)))))
+abline(h=c(0,1))
+```
+
 ### simulation example
 
-Simulation example is presented in the survClust manuscrpt[1]. 
+Simulation example is presented in the survClust manuscript $^1$.See Figure **(S1)** and **Supplementary Note**. Below we provide [code](#appendix) on how we generated the simulated dataset and how to run it via survClust.  
+
+
+```{r}
+ptm <- Sys.time()
+sim_cv.fit<-foreach(kk=2:7) %dopar% cvrounds(simdat, simsurvdat,kk)
+ptm2 <- Sys.time()
+
+ptm
+ptm2
+```
+
+The above process took about `r ptm2-ptm` on a *macOS Catalina* with *2.6 GHz Dual-Core Intel Core i5* running on *8Gb RAM*. 
+
+The output is a list object consisting of 6 sub-lists for $k = 2:7$, with 10 `cv.survclust` output (for each round of cross-validation), each consisting of `cv.labels`, `cv.logrank`, `cv.spwss` for 3 folds. 
+
+Now, let's use `survClust::getStats` to summarize and `survClust::plotStats` to plot some of the supervised integrative clustering metrics. 
+
+```{r, fig.width=8, fig.height=8, fig.cap= "survClust analysis of simulated dataset"}
+
+ss_stats <- getStats(sim_cv.fit, kk=7, cvr=10)
+plotStats(ss_stats, 2:7)
+```
+
+#### Picking k cluster solution 
+
+In the above plot, the topleft plot is summarizing logrank over 10 rounds of cross-validated class labels across 3-fold cross-validation. Here, we see that logrank peaks at `k=3`. 
+
+The topright plot is summarizing `SPWSS` or `Standardized Pooled Within Sum of Squares`. The plot elbows at `k=4`
+
+The last plot, on the bottomleft, shows for each `k` how many `k` class labels have `<=5` samples in 10 rounds of cross validation. In the simulation example, cluster solutions having `<5` samples increases at `k=7`
+
+```{r, message=FALSE, fig.cap= "survClust k=3 class labels KM analysis for simulated dataset "}
+
+k3 <- cv_voting(sim_cv.fit, getDist(simdat, simsurvdat), pick_k=3)
+
+sim_class_labels <- c(rep(1, 50), rep(2,50), rep(3,50))
+
+table(k3, sim_class_labels)
+
+plot(survfit(Surv(simsurvdat[,1], simsurvdat[,2]) ~ k3), mark.time=TRUE, col=1:3)
+```
+
+We see, that we are able to get the simulated class labels as survClust solution with good concordance. 
+
+### Bonus - UVM mutation data alone 
+
+survClust allows for integration of one or more data types. The data can be either continuous (RNA, methylation, miRNA or protein expression or copy number segmentation values) or binary (mutation status, `wt=0, mut =1`).
+
+One can perform survClust on individual data alone. In this example, we will perform survClust on TCGA UVM mutation data alone. 
 
 ```{r}
 
+library(doParallel)
+registerDoParallel(cores=6)
+
+#function to do cross validation 
+cvrounds_mut <- function(x,survdat,kk){
+    this.fold<-3
+    fit<-list()
+    for (i in 1:10){
+        fit[[i]] <- cv.survclust(x,survdat,kk,this.fold, type="mut")
+        print(paste0("finished ", i, " rounds for k= ", kk))
+    }
+    return(fit)
+}
+
+#let's create a list object with just the mutation data 
+uvm_mut_dat <- list()
+uvm_mut_dat[[1]] <- uvm_dat[[1]]
+
+ptm <- Sys.time()
+uvm_mut_cv.fit<-foreach(kk=2:7) %dopar% cvrounds_mut(uvm_mut_dat, uvm_survdat,kk)
+ptm2 <- Sys.time()
+
 
 ```
-### Bonus - UVM mutation data alone 
 
+```{r, fig.width=8, fig.height=8, fig.cap= "survClust analysis of TCGA UVM mutation data alone"}
 
-## Results 
-
-The figure sizes have been customised so that you can easily put two images side-by-side. 
-
-```{r, fig.show='hold'}
-plot(1:10)
-plot(10:1)
+ss_stats <- getStats(uvm_mut_cv.fit, kk=7, cvr=10)
+plotStats(ss_stats, 2:7)
 ```
 
-You can enable figure captions by `fig_caption: yes` in YAML:
 
-output:
-rmarkdown::html_vignette:
-fig_caption: yes
+#### Picking k cluster solution 
 
-Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
+Firstly, since, these are only 10 rounds of cross validation, there is a lot of variability in each rounds of cross-validation, and the results here are for demonstration purpose only.
 
-## Appendix
+In the above plot, the topleft plot is summarizing logrank over 10 rounds of cross-validated class labels across 3-fold cross-validation. Here, we see how logrank peaks at `k=4`. 
+
+The topright plot is summarizing `SPWSS` or `Standardized Pooled Within Sum of Squares`. Here the plot elbows at `k=4`
+
+The last plot, on the bottomleft, shows for each `k` how many `k` class labels have `<=5` samples in 10 rounds of cross validation. We see that `k=3` has cluster solutions with `<=5` samples a lot more than `k=4`. 
+
+
+```{r, fig.width=4, fig.height=4, message=FALSE, fig.cap= "survClust k=3 class labels KM analysis for TCGA UVM mutation data alone"}
+
+k4 <- cv_voting(uvm_mut_cv.fit, getDist(uvm_mut_dat, uvm_survdat), pick_k=4)
+plot(survfit(Surv(uvm_survdat[,1], uvm_survdat[,2]) ~ k4), mark.time=TRUE, col=2:5)
+```
+
+Let' see these discriminant features. 
+
+```{r}
+
+mut_k4_test <- apply(uvm_mut_dat[[1]],2,function(x) fisher.test(x,k4)$p.value)
+head(sort(p.adjust(mut_k4_test)))
+```
+
+```{r, fig.cap="TCGA UVM mutation data alone for k=4"}
+
+sort_idx <- order(k4)
+
+panelmap::makepanel(k4[sort_idx], 
+                    gr.name = "k4", gr.col = c("red", "blue", "green", "lightblue"),
+                    uvm_dat[[1]][sort_idx,c("SF3B1","GNAQ", "GNA11", "CYSLTR2")], 
+                    mat.col = list(GNAQ = c("white", "black"), GNA11 = c("white", "black"), SF3B1 = c("white", "black"), CYSLTR2 = c("white", "black")), mat.type = c(1,1,1,1))
+
+
+```
+
+
+## Appendix {#appendix}
 
 ### Process TCGA dataset 
 
@@ -291,7 +420,7 @@ uvm_seg <- seg[seg$Sample %in% uvm_clin$bcr_patient_barcode,]
 
 colnames(uvm_seg) <- c("Sample", "Chromosome", "Start", "End", "Num_Probes", "Segment_Mean")
 
-# pass epsillon as 0.001 default or user
+# pass epsilon as 0.001 default or user
 reducedMseg <- CNregions(ss_seg,epsilon=0.001,adaptive=FALSE,rmCNV=FALSE, cnv=NULL, frac.overlap=0.5, rmSmallseg=TRUE, nProbes=75)
 
 uvm_dat <- list(uvm_mut = uvm_maf, uvm_cn = uvm_seg)
@@ -387,15 +516,19 @@ time <- c(surv_time_class1, surv_time_class2, surv_time_class3)
 survdat <- cbind(time, event)
 
 simsurvdat <- cbind(time, event)
-
+rownames(simsurvdat) = sample_names
 ```
 
 ## Refrences
 
-1. survclust 
-2. tcga pancan 
-3. icluster 
-4. cbs 
+1. Arora, Arshi, et al. "Pan-cancer identification of clinically relevant genomic subtypes using outcome-weighted integrative clustering." Genome medicine 12.1 (2020): 1-13.
+
+2. Hoadley, Katherine A., et al. "Cell-of-origin patterns dominate the molecular classification of 10,000 tumors from 33 types of cancer." Cell 173.2 (2018): 291-304.
+
+3. Shen, Ronglai, Adam B. Olshen, and Marc Ladanyi. "Integrative clustering of multiple genomic data types using a joint latent variable model with application to breast and lung cancer subtype analysis." Bioinformatics 25.22 (2009): 2906-2912.
+
+4. Seshan, Venkatraman E., et al. "Package ‘DNAcopy’." Package “DNAcopy.” (2013).
+
 5. Tibshirani R, Walther G, Hastie T. Estimating the number of clusters in a data set via the gap statistic. J Roy Stat Soc B. 2001;63:411–23. https://doi.org/10.1111/1467-9868.00293.
 
 ## SessionInfo

@@ -7,7 +7,7 @@ Authors@R:
            comment = c(ORCID = "0000-0002-4040-1787"))
 Description: survClust is an outcome weighted integrative clustering algorithm used to classify multi-omic samples on their available time to event information. 
 VignetteBuilder: knitr
-License: Artistic-2.0
+License: MIT + file LICENSE
 Imports: Rcpp, MultiAssayExperiment, pdist, survival 
 LinkingTo: Rcpp
 URL: https://github.com/arorarshi/survClust

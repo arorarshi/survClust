@@ -37,8 +37,8 @@
         survdat <- survdat[inter,]
         
         #calculate survobj upfront
-        survobj<-survival::Surv(as.numeric(survdat[,1]),as.numeric(survdat[,2]))
-        logHR<- apply(mat.train,2, function(y) tryCatch({
+        survobj <- survival::Surv(as.numeric(survdat[,1]),as.numeric(survdat[,2]))
+        logHR <- apply(mat.train,2, function(y) tryCatch({
             summary(survival::coxph(survobj ~ y))$coefficients[1]
         }, warning = function(w) {
             if(grepl("infinite", w$message))
@@ -52,18 +52,18 @@
         logHR <- abs(logHR)
         #NA in HR can result when a gene is not mutated
         #substitute it as 0 
-        logHR[which(is.na(logHR))] = 0 
+        logHR[which(is.na(logHR))] <- 0 
         #on features which are columns, same in all and train
         mat.train.wt <- t(t(mat.train) * sqrt(logHR))
         #multiply HR on whole
         all.wt <- t(t(mat) * sqrt(logHR))
-        mat.wt<-list(all=all.wt, train=mat.train.wt)
+        mat.wt <- list(all=all.wt, train=mat.train.wt)
         return(mat.wt)
     }
     
 }
 
-.getWeights_mae<- function(datasets, cv, train.snames){
+.getWeights_mae <- function(datasets, cv, train.snames){
     
     mae_assays <- assays(datasets)
     dat_wt_mae <- lapply(mae_assays, 
@@ -72,7 +72,7 @@
     
 }
 
-.getUnionDist<-function(rnames,dat, type=NULL){
+.getUnionDist <- function(rnames,dat, type=NULL){
     
     dist.dat<-list()
     
@@ -83,15 +83,18 @@
             m.na <- matrix(NA,nrow=length(setdiff(rnames,rownames(m))),ncol=ncol(m))
             rownames(m.na) <- setdiff(rnames,rownames(m))
             m <- rbind(m,m.na)
-            m < -m[rnames,]
+            m <- m[rnames,]
         }
         if(!(is.null(type))){
-            if(type=="mut"){dist.dat[[i]] <- dist_wtbinary(m)
-            rownames(dist.dat[[i]]) <- colnames(dist.dat[[i]]) = rownames(m)}}
+            if(type=="mut"){
+                dist.dat[[i]] <- dist_wtbinary(m)
+                rownames(dist.dat[[i]]) = colnames(dist.dat[[i]]) = rownames(m)
+            }
+        }
         
         if(is.null(type)){    
             m2 <- m*m
-            m2.ss <- sum(m2, na.rm=T)
+            m2.ss <- sum(m2, na.rm=TRUE)
             m.tr <- m/sqrt(m2.ss)
             dist.dat[[i]] <- as.matrix(dist(m.tr, method="euclidean"))
         }
@@ -101,7 +104,7 @@
 
 
 
-.get_relabel<-function(pattern, olabel, centroid.cluster,kk){
+.get_relabel <- function(pattern, olabel, centroid.cluster,kk){
     relabel <- rep(NA, length(olabel))
     names(relabel) <- names(olabel)
     
@@ -112,7 +115,7 @@
         if(length(idx)!=0){
             change.label <- centroid.cluster[idx]
             idx2 <- which(olabel == i)
-            if(length(idx2)!=0){relabel[idx2] = change.label}
+            if(length(idx2)!=0){relabel[idx2] <- change.label}
         }
     }
     if(any(is.na(relabel))){warning("there is a NA in relabel, something is wrong with clustering, noisy data or pick lower k?")}
@@ -120,7 +123,7 @@
 }
 
 
-.get_centroid<-function (mat, labels, fold)
+.get_centroid <- function (mat, labels, fold)
 {
     ul <- unique(labels)
     if (ncol(mat) == 1) {
@@ -136,7 +139,7 @@
             centroids[i, ] <- apply(mat.ul, 2, mean)
         }
     }
-    rownames(centroids) <- cat("f", fold, "_k", ul)
+    rownames(centroids) <- paste0("f", fold, "_k", ul)
     return(centroids)
 }
 

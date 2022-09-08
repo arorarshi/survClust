@@ -21,7 +21,7 @@
 #' @export
 plotStats <- function(out.getStats,labels=NULL,...){
     
-    if(is.null(labels)){labels=2:8}
+    if(is.null(labels)){labels <- 2:8}
     dots <- list(...)
     #if(is.null(dots$main)){dots$main = paste0(nrow(out.getStats$lr)," datapoints") }
     

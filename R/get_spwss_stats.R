@@ -13,7 +13,7 @@ get_spwss_stats <- function(dist_mat,labels){
     dist_mat[lower.tri(dist_mat,diag=TRUE)] <- NA
     tss <- sum(dist_mat, na.rm=TRUE)
     wss <- rep(NA, length(ll))
-    for (i in 1:length(ll)){
+    for (i in seq_along(ll)){
         wss[i] <- sum(dist_mat[labels==ll[i], labels==ll[i]], na.rm=TRUE)
     }
     

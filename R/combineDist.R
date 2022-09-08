@@ -43,9 +43,9 @@ combineDist <- function(dist.dat){
     iter <- 1
     combMatFull <- combMat
     #remove incomplete pairwise information
-    while(sum(is.na(combMatFull))!=0){
-        if (iter==1){del.idx <- idx[iter]}
-        if (iter!=1){del.idx <- c(del.idx, idx[iter])}
+    while(sum(is.na(combMatFull)) != 0){
+        if (iter == 1){del.idx <- idx[iter]}
+        if (iter != 1){del.idx <- c(del.idx, idx[iter])}
         combMatFull <- combMat[-del.idx, -del.idx]
         iter <- iter + 1
     }

@@ -39,7 +39,7 @@
     
     centroids<-list()
     
-    for(i in 1:length(train.labels)){
+    for(i in seq_along(train.labels)){
         centroids[[i]] <- .get_centroid(mat, train.labels[[i]],i)
     }
     
@@ -53,7 +53,7 @@
     relabel <- rep(NA,nrow(mat))
     names(relabel) <- rownames(mat)
     
-    for(i in 1:fold){
+    for(i in seq_len(fold)){
         pattern <- paste0("f",i,"_k")
         rr <- .get_relabel(pattern, cv.test.labels[[i]], all.cluster,k)
         relabel[names(rr)] <- rr
@@ -145,7 +145,7 @@ cv.survclust <- function(datasets, survdat=NULL,k,fold, cmd.k=NULL, type=NULL){
     #cv.test.rand.index =NA
     survclust_fit <- list()
     
-    for(i in 1:fold){
+    for(i in seq_len(fold)){
         #Segement your data by fold using the which() function
         test.idx <- ll.rand[which(folds==i)]
         train.idx <- setdiff(ll,test.idx)
@@ -186,7 +186,7 @@ cv.survclust <- function(datasets, survdat=NULL,k,fold, cmd.k=NULL, type=NULL){
     
     message("finished ", fold, " cross validation, total samples-", length(cv.test.relabels))
     cv.test.relabels <- cv.test.relabels[rownames(clin.whole)]
-    if (length(unique(cv.test.relabels)) != my.k){warning(paste0("Test labels not equal to chosen k ",my.k)) }
+    if (length(unique(cv.test.relabels)) != my.k){warning("Test labels not equal to chosen k ",my.k) }
     
     #if everything collapses after test relabeling
     if (length(unique(cv.test.relabels)) ==1){
