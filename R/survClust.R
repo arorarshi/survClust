@@ -28,7 +28,7 @@
 #' @importFrom pdist pdist
 #' @importFrom survival survdiff survfit
 #' @export
-survClust<-function(combine.dist,survdat,k, cmd.k=NULL){
+survClust <- function(combine.dist,survdat,k, cmd.k=NULL){
     if(is.null(rownames(survdat)))
         stop("rowanmes of survdat can't be NULL")
     

@@ -34,7 +34,7 @@
 #' 
 #' @importFrom MultiAssayExperiment MultiAssayExperiment
 #' @export
-getDist<-function(datasets,survdat=NULL,cv=FALSE,train.snames=NULL,type=NULL){
+getDist <- function(datasets,survdat=NULL,cv=FALSE,train.snames=NULL,type=NULL){
     
     if(is(datasets, "MultiAssayExperiment")){survdat <- colData(datasets)}
     if(is.null(survdat))

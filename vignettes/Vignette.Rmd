@@ -61,7 +61,7 @@ The data and pre-processing steps are largely followed from iCluster$^3$ manual 
 ```{r}
 library(survClust)
 library(survival)
-library(doParallel)
+library(BiocParallel)
 
 #mutation data
 uvm_dat[[1]][1:5,1:5]
@@ -76,23 +76,18 @@ head(uvm_survdat)
 
 ## Supervised integrative cluster analysis 
 
-To run supervised integrative clustering analysis - we will be calling `cv.survclust`. Cross-validation takes time and we will be using the `doParallel` package and splitting cross-validation across `k` clusters. 
+To run supervised integrative clustering analysis - we will be calling `cv.survclust`. Cross-validation takes time and we will be using the `BiocParallel` package and splitting cross-validation across `k` clusters. 
 
 We will perform **3-fold** cross-validation over **10** rounds as follows: 
 
 ```{r, echo=TRUE, eval=TRUE}
 
-#let's choose k = 2:7, split over 6 cores
-
-library(doParallel)
-registerDoParallel(cores=6)
-
 #function to do cross validation 
-cvrounds<-function(x,survdat,kk){
+uvm_all_cvrounds<-function(kk){
     this.fold<-3
     fit<-list()
     for (i in 1:10){
-        fit[[i]] <- cv.survclust(x,survdat,kk,this.fold)
+        fit[[i]] <- cv.survclust(uvm_dat,uvm_survdat,kk,this.fold)
         print(paste0("finished ", i, " rounds for k= ", kk))
     }
     return(fit)
@@ -108,7 +103,7 @@ We will be using this code for both UVM data and then use this as a simulation e
 
 ```{r, echo=TRUE, eval=FALSE}
 ptm <- Sys.time()
-cv.fit<-foreach(kk=2:7) %dopar% cvrounds(uvm_dat, uvm_survdat,kk)
+cv.fit<-bplapply(2:7, uvm_all_cvrounds)
 ptm2 <- Sys.time()
 
 #> ptm
@@ -174,18 +169,13 @@ head(sort(p.adjust(mut_k4_test)))
 ```
 
 All the figures as shown in the manuscript are plotted using `panelmap`. It is available on GitHub over here - https://github.com/arorarshi/panelmap
-We will use it to see the distribution of these mutations across the 4 clusters. 
 
-```{r, fig.cap= "TCGA UVM mutation features for k=4"}
-
-sort_idx <- order(k4)
-
-panelmap::makepanel(k4[sort_idx], 
-                    gr.name = "k4", gr.col = c("black","red", "blue", "green"),
-                    uvm_dat[[1]][sort_idx,c("SF3B1","GNAQ", "GNA11", "BAP1", "EIF1AX")], 
-                    mat.col = list(GNAQ = c("white", "black"), GNA11 = c("white", "black"), SF3B1 = c("white", "black"), BAP1 = c("white", "black"), EIF1AX = c("white", "black")), mat.type = c(1,1,1,1,1))
+We will use it to see the distribution of these mutations across the 4 clusters from a previous run. An example from previous runs is shown below. *This is only for illustration process and the cluster groups might differ between the latest run.*  
 
 
+```{r, echo = FALSE, fig.cap="TCGA UVM mutation features for k=4"}
+htmltools::img(src = knitr::image_uri("uvm_mut_example.png"), 
+               style = 'margin-left: auto;margin-right: auto')
 ```
 
 And for Copy Number data as follows - 
@@ -202,22 +192,22 @@ cn_imagedata <- cn_imagedata[,ncol(cn_imagedata):1]
 #image(cn_imagedata,col=gplots::bluered(50),axes=F)
 
 #image y labels - chr names
-cnames = colnames(cn_imagedata)
-cnames = unlist(lapply(strsplit(cnames, "\\."), function(x) x[1]))
-tt = table(cnames)
-nn = paste0("chr",1:22)
+cnames <- colnames(cn_imagedata)
+cnames <- unlist(lapply(strsplit(cnames, "\\."), function(x) x[1]))
+tt <- table(cnames)
+nn <- paste0("chr",1:22)
 
-chr.labels = rep(NA, length(cnames))
+chr.labels <- rep(NA, length(cnames))
 
-index=1
-chr.labels[1] = "1"
+index <- 1
+chr.labels[1] <- "1"
 
 for(i in 1:(length(nn)-1)) {
-    index = index + tt[nn[i]]
-    chr.labels[index] = gsub("chr","",nn[i+1])
+    index <- index + tt[nn[i]]
+    chr.labels[index] <- gsub("chr","",nn[i+1])
 }
 
-idx = which(!(is.na(chr.labels)))
+idx <- which(!(is.na(chr.labels)))
 
 image(cn_imagedata,col=gplots::bluered(50),axes=FALSE)
 
@@ -232,8 +222,21 @@ Simulation example is presented in the survClust manuscript $^1$.See Figure **(S
 
 
 ```{r}
+
+#function to do cross validation 
+sim_cvrounds<-function(kk){
+    this.fold<-3
+    fit<-list()
+    for (i in 1:10){
+        fit[[i]] <- cv.survclust(simdat, simsurvdat,kk,this.fold)
+        print(paste0("finished ", i, " rounds for k= ", kk))
+    }
+    return(fit)
+}
+
+
 ptm <- Sys.time()
-sim_cv.fit<-foreach(kk=2:7) %dopar% cvrounds(simdat, simsurvdat,kk)
+sim_cv.fit<-bplapply(2:7, sim_cvrounds)
 ptm2 <- Sys.time()
 
 ptm
@@ -281,15 +284,12 @@ One can perform survClust on individual data alone. In this example, we will per
 
 ```{r}
 
-library(doParallel)
-registerDoParallel(cores=6)
-
 #function to do cross validation 
-cvrounds_mut <- function(x,survdat,kk){
+cvrounds_mut <- function(kk){
     this.fold<-3
     fit<-list()
     for (i in 1:10){
-        fit[[i]] <- cv.survclust(x,survdat,kk,this.fold, type="mut")
+        fit[[i]] <- cv.survclust(uvm_mut_dat, uvm_survdat,kk,this.fold, type="mut")
         print(paste0("finished ", i, " rounds for k= ", kk))
     }
     return(fit)
@@ -300,7 +300,7 @@ uvm_mut_dat <- list()
 uvm_mut_dat[[1]] <- uvm_dat[[1]]
 
 ptm <- Sys.time()
-uvm_mut_cv.fit<-foreach(kk=2:7) %dopar% cvrounds_mut(uvm_mut_dat, uvm_survdat,kk)
+uvm_mut_cv.fit<-bplapply(2:7, cvrounds_mut)
 ptm2 <- Sys.time()
 
 
@@ -337,19 +337,6 @@ Let' see these discriminant features.
 mut_k4_test <- apply(uvm_mut_dat[[1]],2,function(x) fisher.test(x,k4)$p.value)
 head(sort(p.adjust(mut_k4_test)))
 ```
-
-```{r, fig.cap="TCGA UVM mutation data alone for k=4"}
-
-sort_idx <- order(k4)
-
-panelmap::makepanel(k4[sort_idx], 
-                    gr.name = "k4", gr.col = c("red", "blue", "green", "lightblue"),
-                    uvm_dat[[1]][sort_idx,c("SF3B1","GNAQ", "GNA11", "CYSLTR2")], 
-                    mat.col = list(GNAQ = c("white", "black"), GNA11 = c("white", "black"), SF3B1 = c("white", "black"), CYSLTR2 = c("white", "black")), mat.type = c(1,1,1,1))
-
-
-```
-
 
 ## Appendix {#appendix}
 
