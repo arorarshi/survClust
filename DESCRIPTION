@@ -1,15 +1,24 @@
 Package: survClust
-Type: Package
-Title: Identification of clinically relevant genomic subtypes using outcome weighted learning
-Version: 1.0
-Date: 2019-12-29
-Author: Arshi Arora
-Maintainer: Arshi Arora <aroraa@mskcc.org>
-Description: survClust is an outcome weighted clustering algorithm used to classify multi-omic samples on their available time to event information. 
+Title: Identification Of Clinically Relevant Genomic Subtypes Using Outcome Weighted Learning
+Version: 0.99.0
+Date: 2022-08-04
+Authors@R: 
+    person("Arshi", "Arora", , "arshiaurora@gmail.com", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-4040-1787"))
+Description: survClust is an outcome weighted integrative clustering algorithm used to classify multi-omic samples on their available time to event information. 
+VignetteBuilder: knitr
 License: MIT + file LICENSE
-Imports: 
-    Rcpp (>= 1.0.2),
-    plyr,
-    pdist,
-    survival
+Imports: Rcpp, MultiAssayExperiment, pdist, survival 
 LinkingTo: Rcpp
+URL: https://github.com/arorarshi/survClust
+BugReports: https://support.bioconductor.org/t/survClust
+biocViews: Software, Clustering, Survival
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.1
+LazyData: true
+Depends: 
+    R (>= 4.2.0)
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

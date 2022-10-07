@@ -1,6 +1,7 @@
 #include <Rcpp.h>
 using namespace Rcpp;
 
+//' @export
 // [[Rcpp::export]]
 Rcpp::NumericMatrix dist_wtbinary(Rcpp::NumericMatrix ww) {
   
