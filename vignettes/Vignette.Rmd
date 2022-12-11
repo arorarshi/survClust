@@ -503,7 +503,7 @@ time <- c(surv_time_class1, surv_time_class2, surv_time_class3)
 survdat <- cbind(time, event)
 
 simsurvdat <- cbind(time, event)
-rownames(simsurvdat) = sample_names
+rownames(simsurvdat) <- sample_names
 ```
 
 ## Refrences
