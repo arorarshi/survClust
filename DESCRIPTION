@@ -5,7 +5,7 @@ Date: 2022-08-04
 Authors@R: 
     person("Arshi", "Arora", , "arshiaurora@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-4040-1787"))
-Description: survClust is an outcome weighted integrative clustering algorithm used to classify multi-omic samples on their available time to event information. 
+Description: survClust is an outcome weighted integrative clustering algorithm used to classify multi-omic samples on their available time to event information. The resulting clusters are cross-validated to avoid over overfitting and output classification of samples that are molecularly distinct and clinically meaningful. It takes in binary (mutation) as well as continuous data (other omic types). 
 VignetteBuilder: knitr
 License: MIT + file LICENSE
 Imports: Rcpp, MultiAssayExperiment, pdist, survival 
@@ -16,9 +16,10 @@ biocViews: Software, Clustering, Survival
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.1
-LazyData: true
+LazyData: FALSE
 Depends: 
     R (>= 4.2.0)
 Suggests: 
+    knitr,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
