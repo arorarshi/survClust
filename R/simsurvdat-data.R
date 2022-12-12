@@ -8,15 +8,14 @@
 #'
 #' @docType data
 #'
-#' @usage data(simdat)
+#' @usage data(simsurvdat)
 #'
-#' @format An object of class \code{"list"}
+#' @format An object of class \code{"matrix"}
 #'
 #' @keywords datasets
 #'
 #' @examples
-#' data(simdat)
-#' class(simdat)
-#' dim(simdat[[1]])
-#' simdat[[1]][1:5,1:5]
-"simdat"
+#' data(simsurvdat)
+#' dim(simsurvdat)
+#' head(simsurvdat)
+"simsurvdat"

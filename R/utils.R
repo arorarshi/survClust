@@ -88,7 +88,8 @@
         if(!(is.null(type))){
             if(type=="mut"){
                 dist.dat[[i]] <- dist_wtbinary(m)
-                rownames(dist.dat[[i]]) = colnames(dist.dat[[i]]) = rownames(m)
+                rownames(dist.dat[[i]]) <- rownames(m)
+                colnames(dist.dat[[i]]) <- rownames(m)
             }
         }
         
