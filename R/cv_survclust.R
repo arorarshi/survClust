@@ -7,7 +7,7 @@
     
     #where row - samples, col - genes
     centroid <- matrix(NA, nrow = k, ncol = ncol(all.cmd))
-    for (kk in 1:k) {
+    for (kk in seq_len(k)) {
         #meaning k clust has one sample. #WARNING #check
         if(is.vector(all.cmd[names(fit$cluster)[which(fit$cluster==kk)],]) & ncol(all.cmd) > 1){
             message("k=",k, " training cluster has one sample, prediction might be inaccurate")
@@ -62,10 +62,27 @@
     return(relabel)
 }
 
-#' performs cross validation on supervised clustering, \code{survClust} for a particular \code{k}. \code{cv.survclust} runs 
+#Calculate standardized pooled within-cluster sum of squares (SPWSS)
+.get_spwss_stats <- function(dist_mat,labels){
+    
+    ll <- unique(labels)
+    dist_mat[lower.tri(dist_mat,diag=TRUE)] <- NA
+    tss <- sum(dist_mat, na.rm=TRUE)
+    wss <- rep(NA, length(ll))
+    for (i in seq_along(ll)){
+        wss[i] <- sum(dist_mat[labels==ll[i], labels==ll[i]], na.rm=TRUE)
+    }
+    
+    tot.withinss <- sum(wss)
+    within.over.tot <- tot.withinss/tss
+    return((spwss <- within.over.tot))
+}
+
+
+#' performs cross validation on supervised clustering, \code{survClust} for a particular \code{k}. \code{cv_survclust} runs 
 #' 
 #' @description 
-#'\code{cv.survclust} performs \code{k} fold cross-validation, runs \code{survClust} on each training and 
+#'\code{cv_survclust} performs \code{k} fold cross-validation, runs \code{survClust} on each training and 
 #'hold out test fold and return cross-validated supervised cluster labels.  
 #'
 #' @param datasets A list object containing \code{m} data matrices representing \code{m} different genomic data types measured in a set of \code{N~m} samples. 
@@ -87,12 +104,12 @@
 #'  
 #' @examples 
 #' library(survClust)
-#' cv.fit <- cv.survclust(datasets = simdat, survdat = simsurvdat, k = 3, fold=3 )
+#' cv.fit <- cv_survclust(datasets = simdat, survdat = simsurvdat, k = 3, fold=3 )
 #' 
 #' @author Arshi Arora
 #'
 #' @export
-cv.survclust <- function(datasets, survdat=NULL,k,fold, cmd.k=NULL, type=NULL){
+cv_survclust <- function(datasets, survdat=NULL,k,fold, cmd.k=NULL, type=NULL){
     
     my.k <- as.numeric(k)
     fold <- as.numeric(fold)
@@ -196,7 +213,7 @@ cv.survclust <- function(datasets, survdat=NULL,k,fold, cmd.k=NULL, type=NULL){
     
     if (length(unique(cv.test.relabels)) !=1){cv.all.logrank <- survival::survdiff(Surv(clin.whole[names(cv.test.relabels),1], clin.whole[names(cv.test.relabels),2]) ~ cv.test.relabels)$chisq}
     #cv.all.conc <- summary(coxph(Surv(clin.whole[names(cv.test.relabels),1], clin.whole[names(cv.test.relabels),2]) ~ cv.test.relabels))$concordance[1]
-    cv.test.spwss <- get_spwss_stats(combine.dist, cv.test.relabels)
+    cv.test.spwss <- .get_spwss_stats(combine.dist, cv.test.relabels)
     cv.fit <- list(cv.labels = cv.test.relabels, cv.logrank = cv.all.logrank, cv.spwss = cv.test.spwss)
     return(cv.fit)
     

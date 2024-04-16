@@ -1,9 +1,9 @@
 
-#' Compute fit statistics after cross validation via \code{cv.survclust}
+#' Compute fit statistics after cross validation via \code{cv_survclust}
 #'
-#' @param cv.fit output from \code{cv.survclust} object 
-#' @param kk number of \code{k} clusters on which \code{cv.survclust} was run, default is \code{8}
-#' @param cvr round of cross-validation on which \code{cv.survclust}  was run, default is \code{50} 
+#' @param cv.fit output from \code{cv_survclust} object 
+#' @param kk number of \code{k} clusters on which \code{cv_survclust} was run, default is \code{8}
+#' @param cvr round of cross-validation on which \code{cv_survclust}  was run, default is \code{50} 
 #' @details \code{getStats} calculates Logrank statistic and standardized pooled within sum of squares (SPWSS) across 
 #' cross-validated labels. Visualize it via \code{plotStats}
 #' @return A list of the following
@@ -26,7 +26,7 @@ getStats <- function(cv.fit,kk=8, cvr=50){
     spwss <- matrix(NA, nrow=cvr, ncol=kk)
     bad.sol <- rep(NA, length=kk)
     
-    for(i in 1:kk){
+    for(i in seq_len(kk)){
         lr[,i] <- t(unlist(lapply(cv.fit[[i]], function(x) x$cv.logrank)))
         spwss[,i] <- t(unlist(lapply(cv.fit[[i]], function(x) x$cv.spwss)))
         min.labels <- unlist(lapply(cv.fit[[i]], function(x) min(table(x$cv.labels)) [1]))

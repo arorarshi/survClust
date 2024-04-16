@@ -2,16 +2,16 @@
 % Please edit documentation in R/getStats.R
 \name{getStats}
 \alias{getStats}
-\title{Compute fit statistics after cross validation via \code{cv.survclust}}
+\title{Compute fit statistics after cross validation via \code{cv_survclust}}
 \usage{
 getStats(cv.fit, kk = 8, cvr = 50)
 }
 \arguments{
-\item{cv.fit}{output from \code{cv.survclust} object}
+\item{cv.fit}{output from \code{cv_survclust} object}
 
-\item{kk}{number of \code{k} clusters on which \code{cv.survclust} was run, default is \code{8}}
+\item{kk}{number of \code{k} clusters on which \code{cv_survclust} was run, default is \code{8}}
 
-\item{cvr}{round of cross-validation on which \code{cv.survclust}  was run, default is \code{50}}
+\item{cvr}{round of cross-validation on which \code{cv_survclust}  was run, default is \code{50}}
 }
 \value{
 A list of the following
@@ -22,7 +22,7 @@ A list of the following
 }
 }
 \description{
-Compute fit statistics after cross validation via \code{cv.survclust}
+Compute fit statistics after cross validation via \code{cv_survclust}
 }
 \details{
 \code{getStats} calculates Logrank statistic and standardized pooled within sum of squares (SPWSS) across

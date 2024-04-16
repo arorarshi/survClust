@@ -76,7 +76,7 @@
     
     dist.dat<-list()
     
-    for (i in 1:length(dat)){
+    for (i in seq_along(dat)){
         m <- dat[[i]][intersect(rownames(dat[[i]]),rnames),,drop=FALSE]
         #if there are missing samples, add row of NAs for it
         if (length(intersect(rownames(m),rnames)) != length(rnames)){
@@ -109,7 +109,7 @@
     relabel <- rep(NA, length(olabel))
     names(relabel) <- names(olabel)
     
-    for(i in 1:kk){
+    for(i in seq_len(kk)){
         kpattern <- paste0(pattern,i)
         idx <- which(names(centroid.cluster) == kpattern)
         #change current label to this
@@ -131,7 +131,7 @@
         warning("cmd reduces matrix to one eigen value! Noisy data?")
     }
     centroids <- matrix(NA, nrow = length(ul), ncol = ncol(mat))
-    for (i in 1:length(ul)) {
+    for (i in seq_along(ul)) {
         mat.ul <- mat[names(labels)[which(labels == ul[i])], ]
         if (is.vector(mat.ul)) {
             centroids[i, ] <- mat.ul

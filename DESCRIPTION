@@ -1,7 +1,7 @@
 Package: survClust
 Title: Identification Of Clinically Relevant Genomic Subtypes Using Outcome Weighted Learning
-Version: 0.99.6
-Date: 2022-08-04
+Version: 0.99.7
+Date: 2024-04-16
 Authors@R: 
     person("Arshi", "Arora", , "arshiaurora@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-4040-1787"))
@@ -15,11 +15,14 @@ BugReports: https://support.bioconductor.org/t/survClust
 biocViews: Software, Clustering, Survival, Classification
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.1
+RoxygenNote: 7.3.1
 LazyData: true
 Depends: 
-    R (>= 4.2.0)
+    R (>= 3.5.0)
 Suggests: 
     knitr,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0), 
+    gplots, 
+    htmtools, 
+    BiocParallel
 Config/testthat/edition: 3

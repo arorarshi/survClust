@@ -15,7 +15,7 @@ cv_voting(
 )
 }
 \arguments{
-\item{cv.fit}{fit objects as returned from \code{cv.survclust}}
+\item{cv.fit}{fit objects as returned from \code{cv_survclust}}
 
 \item{dat.dist}{weighted distance matrices from \code{getDist}}
 

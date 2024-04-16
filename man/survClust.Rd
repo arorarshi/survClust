@@ -2,6 +2,7 @@
 % Please edit documentation in R/survClust.R, R/zzz.R
 \docType{package}
 \name{survClust}
+\alias{survClust-package}
 \alias{survClust}
 \title{perform supervised clustering for a particular \code{k}}
 \usage{
@@ -35,6 +36,17 @@ cc <- combineDist(dd)
 survclust_fit <- survClust(combine.dist = cc, survdat = simsurvdat, k = 3)
 
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/arorarshi/survClust}
+  \item Report bugs at \url{https://support.bioconductor.org/t/survClust}
+}
+
+}
 \author{
 Arshi Arora
+
+\strong{Maintainer}: Arshi Arora \email{arshiaurora@gmail.com} (\href{https://orcid.org/0000-0002-4040-1787}{ORCID})
+
 }

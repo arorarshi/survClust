@@ -2,7 +2,7 @@
 #' For a \code{survClust} fit, return consolidated labels across rounds of cross validation for a specific \code{k}. 
 #' Note that cv.fit already has consolidated class labels across folds
 #'
-#' @param cv.fit fit objects as returned from \code{cv.survclust} 
+#' @param cv.fit fit objects as returned from \code{cv_survclust} 
 #' @param dat.dist weighted distance matrices from \code{getDist}
 #' @param pick_k choice of k cluster to summarize over rounds of cross validation 
 #' @param cmd.k number of dimensions used by \code{cmdscale} to perform clustering on. Defaults is \code{n-1}  
@@ -49,7 +49,7 @@ cv_voting <- function(cv.fit,dat.dist,pick_k, cmd.k=NULL, pick_k.test=TRUE, minl
     cmd.mat <- cmd.mat[names(cv.fit[[1]]$cv.labels),]
     
     centroids<-list()
-    for (i in 1:cv.rounds){
+    for (i in seq_len(cv.rounds)){
         centroids[[i]] <- .get_centroid(cmd.mat, cv.fit[[i]]$cv.labels,i)
     }
     
@@ -60,7 +60,7 @@ cv_voting <- function(cv.fit,dat.dist,pick_k, cmd.k=NULL, pick_k.test=TRUE, minl
     #print(table(all.cluster))
     #print(all.cluster)
     relabels <- list()
-    for(i in 1:cv.rounds){
+    for(i in seq_len(cv.rounds)){
         pattern <- paste0("f",i,"_k")
         relabels[[i]] <- .get_relabel(pattern, cv.fit[[i]]$cv.labels, all.cluster,pick_k)
         

@@ -32,7 +32,7 @@ combineDist <- function(dist.dat){
     
     arr <- array(unlist(dist.dat), dim = c(nrow(dist.dat[[1]]),ncol(dist.dat[[1]]),length(dist.dat)))
     #calculate mean distance after removing NA
-    combMat <- rowMeans(arr, dim = 2, na.rm = TRUE)
+    combMat <- rowMeans(arr, dims = 2, na.rm = TRUE)
     rownames(combMat) <- rownames(dist.dat[[1]])
     colnames(combMat) <- colnames(dist.dat[[1]])
     #copy the rest of the triangle
