@@ -1,6 +1,6 @@
 Package: survClust
 Title: Identification Of Clinically Relevant Genomic Subtypes Using Outcome Weighted Learning
-Version: 0.99.7
+Version: 0.99.8
 Date: 2024-04-16
 Authors@R: 
     person("Arshi", "Arora", , "arshiaurora@gmail.com", role = c("aut", "cre"),
@@ -23,6 +23,6 @@ Suggests:
     knitr,
     testthat (>= 3.0.0), 
     gplots, 
-    htmtools, 
+    htmltools, 
     BiocParallel
 Config/testthat/edition: 3
